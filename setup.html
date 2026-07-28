@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect your tools — Step Change</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f6f3;
+      --surface: #ffffff;
+      --border: #e2e0da;
+      --border-dark: #ccc9c0;
+      --text: #1a1a18;
+      --text-muted: #888;
+      --text-dim: #bbb;
+      --accent: #1a1a18;
+      --accent-inv: #f7f6f3;
+      --green: #2d8f5e;
+      --green-bg: #edf7f2;
+      --green-border: #b8dfcb;
+      --amber: #b07d24;
+      --amber-bg: #fdf8ee;
+      --amber-border: #e8d5a0;
+      --red: #c0392b;
+      --red-bg: #fdf0ee;
+      --red-border: #e8b8b4;
+      --blue: #2563eb;
+      --blue-bg: #eff5ff;
+      --blue-border: #bfcfef;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+
+    .logo-mark {
+      width: 26px;
+      height: 26px;
+      background: var(--text);
+      border-radius: 5px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      padding: 5px;
+    }
+
+    .logo-mark span {
+      background: var(--bg);
+      border-radius: 1px;
+      display: block;
+    }
+
+    .logo-mark span:last-child { opacity: 0.3; }
+
+    .topbar-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .topbar-client {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    .btn-ghost {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost:hover { color: var(--text); background: var(--border); }
+
+    /* ── MAIN ── */
+    .main {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+
+    .page-eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .page-title {
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .page-sub {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    /* ── PROGRESS ── */
+    .progress-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 40px;
+    }
+
+    .progress-step {
+      height: 3px;
+      flex: 1;
+      border-radius: 100px;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+
+    .progress-step.done { background: var(--text); }
+    .progress-step.active { background: var(--text-muted); }
+
+    /* ── SERVICE CARDS ── */
+    .service-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .service-card.connected {
+      border-color: var(--green-border);
+      background: var(--green-bg);
+    }
+
+    .service-card.error-state {
+      border-color: var(--red-border);
+      background: var(--red-bg);
+    }
+
+    .service-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .service-left { display: flex; align-items: center; gap: 14px; }
+
+    .service-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .service-name {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .service-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .status-badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+    }
+
+    .badge-connected { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .badge-connected::before { background: var(--green); }
+    .badge-pending { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+    .badge-pending::before { background: var(--amber); }
+    .badge-missing { background: var(--border); color: var(--text-muted); border: 1px solid var(--border); }
+    .badge-missing::before { background: var(--text-dim); }
+    .badge-error { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+    .badge-error::before { background: var(--red); }
+
+    .service-body { margin-top: 14px; }
+
+    /* Anthropic key input */
+    .key-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .key-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .key-input:focus { border-color: var(--accent); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+
+    .btn-primary {
+      background: var(--text);
+      color: var(--accent-inv);
+    }
+
+    .btn-primary:hover:not(:disabled) { opacity: 0.85; }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border-dark);
+    }
+
+    .btn-outline:hover:not(:disabled) { background: var(--border); }
+
+    .btn-connect {
+      background: var(--blue-bg);
+      color: var(--blue);
+      border: 1px solid var(--blue-border);
+    }
+
+    .btn-connect:hover:not(:disabled) { background: #deeaff; }
+
+    /* GA4 property selector */
+    .property-select-wrap {
+      margin-top: 12px;
+    }
+
+    .property-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .property-select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .property-manual-input {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    /* CRM tabs (HubSpot / ActiveCampaign) */
+    .crm-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .crm-tab {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border-dark);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .crm-tab:hover { background: var(--border); color: var(--text); }
+    .crm-tab.active {
+      background: var(--text);
+      color: var(--accent-inv);
+      border-color: var(--text);
+    }
+    .key-row + .key-row { margin-top: 8px; }
+    .hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .hint a { color: var(--text); }
+
+    .error-note {
+      font-size: 12px;
+      color: var(--red);
+      margin-top: 8px;
+    }
+
+    .success-note {
+      font-size: 12px;
+      color: var(--green);
+      margin-top: 8px;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      margin-top: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cta-note {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    .spinner-dark {
+      border-color: rgba(0,0,0,0.15);
+      border-top-color: var(--text);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .fade-in {
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-mark"><span></span><span></span><span></span><span></span></div>
+    <span class="topbar-name">Step Change</span>
+    <span class="topbar-client" id="topbar-client"></span>
+  </div>
+  <button class="btn-ghost" onclick="handleLogout()">Sign out</button>
+</div>
+
+<div class="main fade-in">
+  <div class="page-eyebrow">Setup</div>
+  <h1 class="page-title">Connect your tools</h1>
+  <p class="page-sub">Connect three data sources to unlock your Snapshot dashboard. You'll only need to do this once.</p>
+
+  <div class="progress-bar" id="progress-bar">
+    <div class="progress-step" id="step-anthropic"></div>
+    <div class="progress-step" id="step-crm"></div>
+    <div class="progress-step" id="step-ga4"></div>
+  </div>
+
+  <!-- Anthropic -->
+  <div class="service-card" id="card-anthropic">
+    <div class="service-header">
+      <div class="service-left">
+        <div class="service-icon">🤖</div>
+        <div>
+          <div class="service-name">Anthropic (Claude AI)</div>
+          <div class="service-desc">Powers the AI assistant in your dashboard</div>
+        </div>
+      </div>
+      <div class="status-badge badge-missing" id="badge-anthropic">Not connected</div>
+    </div>
+    <div class="service-body" id="body-anthropic">
+      <div class="key-row">
+        <input type="password" class="key-input" id="anthropic-key" placeholder="sk-ant-api03-..." autocomplete="off">
+        <button class="btn btn-primary" id="btn-anthropic" onclick="saveAnthropicKey()">Save key</button>
+      </div>
+      <div class="error-note" id="anthropic-error" style="display:none"></div>
+      <div style="font-size:12px; color: var(--text-muted); margin-top: 8px;">
+        Get your API key at <a href="https://console.anthropic.com" target="_blank" style="color: var(--text);">console.anthropic.com</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRM (HubSpot OR ActiveCampaign) -->
+  <div class="service-card" id="card-crm">
+    <div class="service-header">
+      <div class="service-left">
+        <div class="service-icon">📇</div>
+        <div>
+          <div class="service-name">CRM</div>
+          <div class="service-desc">Deals, contacts, and email campaign data</div>
+        </div>
+      </div>
+      <div class="status-badge badge-missing" id="badge-crm">Not connected</div>
+    </div>
+    <div class="service-body" id="body-crm">
+      <div class="crm-tabs" id="crm-tabs">
+        <button class="crm-tab active" data-crm="hubspot" type="button" onclick="selectCrm('hubspot')">HubSpot</button>
+        <button class="crm-tab" data-crm="activecampaign" type="button" onclick="selectCrm('activecampaign')">ActiveCampaign</button>
+      </div>
+
+      <div id="crm-panel-hubspot">
+        <div class="key-row">
+          <input type="password" class="key-input" id="hubspot-token" placeholder="pat-na1-..." autocomplete="off">
+          <button class="btn btn-primary" id="btn-hubspot" onclick="saveHubspotToken()">Save token</button>
+        </div>
+        <div class="error-note" id="hubspot-error" style="display:none"></div>
+        <div class="hint">
+          HubSpot → Settings → Integrations → Private Apps → Create a private app. Scopes: <strong>crm.objects.deals.read</strong>, <strong>crm.objects.contacts.read</strong>, <strong>content</strong>.
+        </div>
+      </div>
+
+      <div id="crm-panel-activecampaign" style="display:none">
+        <div class="key-row">
+          <input type="text" class="key-input" id="ac-url" placeholder="https://your-account.api-us1.com" autocomplete="off">
+        </div>
+        <div class="key-row">
+          <input type="password" class="key-input" id="ac-key" placeholder="API key…" autocomplete="off">
+          <button class="btn btn-primary" id="btn-ac" onclick="saveActiveCampaignToken()">Save</button>
+        </div>
+        <div class="error-note" id="ac-error" style="display:none"></div>
+        <div class="hint">
+          ActiveCampaign → Settings → Developer. Copy the <strong>API URL</strong> and <strong>Key</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GA4 -->
+  <div class="service-card" id="card-ga4">
+    <div class="service-header">
+      <div class="service-left">
+        <div class="service-icon">📊</div>
+        <div>
+          <div class="service-name">Google Analytics 4</div>
+          <div class="service-desc">Website traffic and behaviour data</div>
+        </div>
+      </div>
+      <div class="status-badge badge-missing" id="badge-ga4">Not connected</div>
+    </div>
+    <div class="service-body" id="body-ga4">
+      <button class="btn btn-connect" id="btn-ga4" onclick="connectGa4()">
+        Connect Google Analytics
+      </button>
+      <div class="error-note" id="ga4-error" style="display:none"></div>
+      <div class="property-select-wrap" id="property-selector" style="display:none">
+        <div class="property-label">Select your GA4 property</div>
+        <select class="property-select" id="property-select" onchange="handlePropertySelect()"></select>
+        <div class="property-manual-input" id="manual-property" style="display:none">
+          <input type="text" class="key-input" id="manual-property-id" placeholder="e.g. 123456789">
+          <button class="btn btn-primary" onclick="saveManualProperty()">Save</button>
+        </div>
+        <div class="error-note" id="property-error" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="cta-note" id="cta-note">Complete all three connections to continue</div>
+    <button class="btn btn-primary" id="cta-btn" onclick="goToDashboard()" disabled style="opacity:0.4;">
+      Go to dashboard →
+    </button>
+  </div>
+</div>
+
+<script>
+// ── State ──
+const slug = getSlug();
+const token = localStorage.getItem(`sc_token_${slug}`);
+let status = { anthropic: {}, hubspot: {}, activecampaign: {}, ga4: {} };
+
+if (!token) {
+  window.location.href = `/${slug}`;
+}
+
+// Read URL params (from OAuth callbacks)
+const urlParams = new URLSearchParams(window.location.search);
+const connectedService = urlParams.get('connected');
+const connectedStatus = urlParams.get('status');
+const connectedDetail = urlParams.get('detail');
+
+function getSlug() {
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  return parts[0];
+}
+
+// ── Init ──
+window.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('topbar-client').textContent = `· Setup`;
+  await loadStatus();
+
+  // Show OAuth result messages
+  if (connectedService && connectedStatus === 'error') {
+    const errEl = document.getElementById(`${connectedService}-error`);
+    if (errEl) {
+      errEl.textContent = getOAuthErrorMessage(connectedDetail);
+      errEl.style.display = 'block';
+    }
+    // Clean URL
+    history.replaceState({}, '', `/${slug}/setup`);
+  }
+});
+
+function getOAuthErrorMessage(detail) {
+  const msgs = {
+    'token_exchange_failed': 'Token exchange failed. Please try again.',
+    'no_refresh_token': 'No refresh token returned. Please revoke app access in your Google Account settings and try again.',
+    'network_error': 'Network error during authentication. Please try again.',
+    'access_denied': 'Access was denied. Please try again and approve all requested permissions.',
+  };
+  return msgs[detail] || `Authentication error: ${detail || 'unknown'}`;
+}
+
+// ── Load status ──
+async function loadStatus() {
+  try {
+    const res = await fetch(`/api/auth?action=status`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (res.status === 401) {
+      localStorage.removeItem(`sc_token_${slug}`);
+      window.location.href = `/${slug}`;
+      return;
+    }
+
+    status = await res.json();
+    renderStatus();
+  } catch (err) {
+    console.error('Failed to load status:', err);
+  }
+}
+
+// ── Render ──
+function renderStatus() {
+  renderService('anthropic', status.anthropic.connected);
+
+  const crmConnected = status.hubspot.connected || status.activecampaign.connected;
+  const crmType = status.hubspot.connected ? 'HubSpot' : status.activecampaign.connected ? 'ActiveCampaign' : null;
+  renderCrm(crmConnected, crmType);
+
+  const ga4Connected = status.ga4.connected;
+  const propertySet = status.ga4.propertySet;
+  const ga4Full = ga4Connected && propertySet;
+
+  renderService('ga4', ga4Full, ga4Connected && !propertySet ? 'pending' : null);
+
+  // Show property selector if connected but no property
+  if (ga4Connected && !propertySet) {
+    renderPropertySelector();
+  }
+
+  // Progress bar
+  const steps = ['anthropic', 'crm', 'ga4'];
+  const connected = [status.anthropic.connected, crmConnected, ga4Full];
+  steps.forEach((step, i) => {
+    const el = document.getElementById(`step-${step}`);
+    el.className = `progress-step ${connected[i] ? 'done' : ''}`;
+  });
+
+  // CTA
+  const allDone = status.anthropic.connected && crmConnected && ga4Full;
+  const btn = document.getElementById('cta-btn');
+  btn.disabled = !allDone;
+  btn.style.opacity = allDone ? '1' : '0.4';
+  document.getElementById('cta-note').textContent = allDone
+    ? 'All services connected — ready to go!'
+    : `${connected.filter(Boolean).length} of 3 connected`;
+}
+
+function renderService(service, connected, overrideState = null) {
+  const card = document.getElementById(`card-${service}`);
+  const badge = document.getElementById(`badge-${service}`);
+  const body = document.getElementById(`body-${service}`);
+
+  if (connected && !overrideState) {
+    card.className = 'service-card connected';
+    badge.className = 'status-badge badge-connected';
+    badge.textContent = 'Connected';
+    if (body) body.style.display = 'none';
+  } else if (overrideState === 'pending') {
+    card.className = 'service-card';
+    badge.className = 'status-badge badge-pending';
+    badge.textContent = 'Action needed';
+  } else {
+    card.className = 'service-card';
+    badge.className = 'status-badge badge-missing';
+    badge.textContent = 'Not connected';
+  }
+}
+
+function renderCrm(connected, crmType) {
+  const card = document.getElementById('card-crm');
+  const badge = document.getElementById('badge-crm');
+  const body = document.getElementById('body-crm');
+  if (connected) {
+    card.className = 'service-card connected';
+    badge.className = 'status-badge badge-connected';
+    badge.textContent = crmType + ' connected';
+    if (body) body.style.display = 'none';
+  } else {
+    card.className = 'service-card';
+    badge.className = 'status-badge badge-missing';
+    badge.textContent = 'Not connected';
+  }
+}
+
+function selectCrm(type) {
+  document.querySelectorAll('.crm-tab').forEach(t => t.classList.toggle('active', t.dataset.crm === type));
+  document.getElementById('crm-panel-hubspot').style.display = type === 'hubspot' ? '' : 'none';
+  document.getElementById('crm-panel-activecampaign').style.display = type === 'activecampaign' ? '' : 'none';
+}
+
+// ── Anthropic ──
+async function saveAnthropicKey() {
+  const key = document.getElementById('anthropic-key').value.trim();
+  const btn = document.getElementById('btn-anthropic');
+  const err = document.getElementById('anthropic-error');
+
+  err.style.display = 'none';
+
+  if (!key) return;
+
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+
+  const res = await fetch('/api/auth?action=save-anthropic-key', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ apiKey: key }),
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    status.anthropic.connected = true;
+    renderStatus();
+  } else {
+    err.textContent = data.error || 'Failed to save key';
+    err.style.display = 'block';
+    btn.innerHTML = 'Save key';
+    btn.disabled = false;
+  }
+}
+
+// ── HubSpot ──
+async function saveHubspotToken() {
+  const hubspotToken = document.getElementById('hubspot-token').value.trim();
+  const btn = document.getElementById('btn-hubspot');
+  const err = document.getElementById('hubspot-error');
+  err.style.display = 'none';
+  if (!hubspotToken) return;
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  const res = await fetch('/api/auth?action=save-hubspot-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ token: hubspotToken }),
+  });
+  const data = await res.json();
+  if (res.ok) {
+    status.hubspot.connected = true;
+    renderStatus();
+  } else {
+    err.textContent = data.error || 'Failed to save token';
+    err.style.display = 'block';
+    btn.innerHTML = 'Save token';
+    btn.disabled = false;
+  }
+}
+
+// ── ActiveCampaign ──
+async function saveActiveCampaignToken() {
+  const apiUrl = document.getElementById('ac-url').value.trim();
+  const apiKey = document.getElementById('ac-key').value.trim();
+  const btn = document.getElementById('btn-ac');
+  const err = document.getElementById('ac-error');
+  err.style.display = 'none';
+  if (!apiUrl || !apiKey) {
+    err.textContent = 'Both API URL and key are required.';
+    err.style.display = 'block';
+    return;
+  }
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  const res = await fetch('/api/auth?action=save-activecampaign-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ apiUrl, apiKey }),
+  });
+  const data = await res.json();
+  if (res.ok) {
+    status.activecampaign.connected = true;
+    renderStatus();
+  } else {
+    err.textContent = data.error || 'Failed to save credentials';
+    err.style.display = 'block';
+    btn.innerHTML = 'Save';
+    btn.disabled = false;
+  }
+}
+
+// ── GA4 ──
+function connectGa4() {
+  window.location.href = `/api/auth?action=google-start&slug=${slug}`;
+}
+
+// ── GA4 Property Selector ──
+function renderPropertySelector() {
+  const wrap = document.getElementById('property-selector');
+  const select = document.getElementById('property-select');
+
+  const properties = status.ga4.availableProperties || [];
+
+  if (properties.length === 0) {
+    // Manual input only
+    wrap.style.display = 'block';
+    document.getElementById('manual-property').style.display = 'flex';
+    select.style.display = 'none';
+  } else {
+    wrap.style.display = 'block';
+    select.innerHTML = '<option value="">— Select a property —</option>';
+    properties.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.displayName} (${p.id})`;
+      select.appendChild(opt);
+    });
+
+    const manualOpt = document.createElement('option');
+    manualOpt.value = '__manual__';
+    manualOpt.textContent = 'Enter ID manually...';
+    select.appendChild(manualOpt);
+  }
+}
+
+function handlePropertySelect() {
+  const val = document.getElementById('property-select').value;
+  const manualWrap = document.getElementById('manual-property');
+
+  if (val === '__manual__') {
+    manualWrap.style.display = 'flex';
+  } else if (val) {
+    manualWrap.style.display = 'none';
+    savePropertyId(val);
+  }
+}
+
+async function saveManualProperty() {
+  const id = document.getElementById('manual-property-id').value.trim();
+  if (!id) return;
+  await savePropertyId(id);
+}
+
+async function savePropertyId(id) {
+  const err = document.getElementById('property-error');
+  err.style.display = 'none';
+
+  const res = await fetch('/api/auth?action=set-ga4-property', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ propertyId: id }),
+  });
+
+  if (res.ok) {
+    status.ga4.propertySet = true;
+    status.ga4.propertyId = id;
+    document.getElementById('property-selector').style.display = 'none';
+    renderStatus();
+  } else {
+    const data = await res.json();
+    err.textContent = data.error || 'Failed to save property';
+    err.style.display = 'block';
+  }
+}
+
+// ── Navigation ──
+function goToDashboard() {
+  window.location.href = `/${slug}`;
+}
+
+function handleLogout() {
+  localStorage.removeItem(`sc_token_${slug}`);
+  window.location.href = `/${slug}`;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "step-change-snapshot",
+  "version": "2.0.0",
+  "description": "Step Change Snapshot — multi-client dashboard",
+  "private": true,
+  "dependencies": {
+    "@upstash/redis": "^1.34.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

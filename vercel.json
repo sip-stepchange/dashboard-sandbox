@@ -1,0 +1,21 @@
+{
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" },
+        { "key": "Pragma",        "value": "no-cache" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin/index.html" },
+    { "source": "/admin/", "destination": "/admin/index.html" },
+    { "source": "/:slug/setup", "destination": "/setup.html" },
+    { "source": "/:slug/setup/", "destination": "/setup.html" },
+    { "source": "/concept-ci", "destination": "/templates/concept-ci.html" },
+    { "source": "/concept-ci/", "destination": "/templates/concept-ci.html" },
+    { "source": "/:slug", "destination": "/index.html" },
+    { "source": "/:slug/", "destination": "/index.html" }
+  ]
+}

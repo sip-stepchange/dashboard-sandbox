@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step Change — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #222222;
+      --border-light: #2a2a2a;
+      --text: #e8e8e8;
+      --text-muted: #666;
+      --text-dim: #444;
+      --accent: #c8f55a;
+      --accent-dim: rgba(200, 245, 90, 0.12);
+      --accent-border: rgba(200, 245, 90, 0.3);
+      --red: #ff5757;
+      --red-dim: rgba(255, 87, 87, 0.1);
+      --amber: #f5a623;
+      --amber-dim: rgba(245, 166, 35, 0.1);
+      --green: #4ade80;
+      --green-dim: rgba(74, 222, 128, 0.1);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── LOGIN SCREEN ── */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .login-logo {
+      margin-bottom: 48px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .login-logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-logo-mark svg { width: 18px; height: 18px; }
+
+    .login-logo-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .login-heading {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .login-sub {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 32px;
+    }
+
+    .field { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    input[type="password"],
+    input[type="text"],
+    input[type="email"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus { border-color: var(--accent-border); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0a0a0a;
+      width: 100%;
+    }
+
+    .btn-primary:hover { background: #d4f870; }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover { border-color: var(--border-light); background: var(--surface); }
+
+    .btn-danger {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid rgba(255, 87, 87, 0.2);
+    }
+
+    .btn-danger:hover { background: rgba(255, 87, 87, 0.2); }
+
+    .error-msg {
+      background: var(--red-dim);
+      border: 1px solid rgba(255, 87, 87, 0.2);
+      color: var(--red);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    /* ── ADMIN DASHBOARD ── */
+    #admin-screen { display: none; }
+
+    .topbar {
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar-logo-mark {
+      width: 24px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 4px;
+    }
+
+    .topbar-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .topbar-right { display: flex; gap: 8px; align-items: center; }
+
+    .main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .section-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 100px;
+      margin-left: 10px;
+    }
+
+    /* ── CREATE CLIENT PANEL ── */
+    .create-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .create-panel-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+    }
+
+    .create-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    @media (max-width: 680px) {
+      .create-row { grid-template-columns: 1fr; }
+    }
+
+    .slug-preview {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      min-height: 16px;
+      transition: color 0.15s;
+    }
+
+    .slug-preview.ready { color: var(--accent); }
+
+    /* ── CLIENTS TABLE ── */
+    .clients-table {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-head {
+      display: grid;
+      grid-template-columns: 1fr 120px 100px 100px 100px 80px;
+      padding: 10px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .client-row {
+      display: grid;
+      grid-template-columns: 1fr 120px 100px 100px 100px 80px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      transition: background 0.1s;
+    }
+
+    .client-row:last-child { border-bottom: none; }
+    .client-row:hover { background: rgba(255,255,255,0.02); }
+
+    .client-name {
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .client-slug {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .client-url {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .status-pill::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+    }
+
+    .pill-connected {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .pill-connected::before { background: var(--green); }
+
+    .pill-pending {
+      background: var(--amber-dim);
+      color: var(--amber);
+    }
+
+    .pill-pending::before { background: var(--amber); }
+
+    .pill-missing {
+      background: var(--red-dim);
+      color: var(--red);
+    }
+
+    .pill-missing::before { background: var(--red); }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { border-color: var(--accent-border); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+    .empty-state {
+      padding: 48px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    .empty-state-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+      opacity: 0.4;
+    }
+
+    .loading-row {
+      padding: 32px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Delete confirm inline */
+    .delete-confirm {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--red);
+    }
+
+    .delete-confirm.show { display: flex; }
+
+    .delete-yes, .delete-no {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .delete-yes { color: var(--red); }
+    .delete-yes:hover { background: var(--red-dim); }
+    .delete-no { color: var(--text-muted); }
+    .delete-no:hover { background: var(--surface); }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card fade-in">
+    <div class="login-logo">
+      <div class="login-logo-mark">
+        <svg viewBox="0 0 18 18" fill="none">
+          <rect x="2" y="2" width="6" height="6" rx="1" fill="#0a0a0a"/>
+          <rect x="10" y="2" width="6" height="6" rx="1" fill="#0a0a0a"/>
+          <rect x="2" y="10" width="6" height="6" rx="1" fill="#0a0a0a"/>
+          <rect x="10" y="10" width="6" height="6" rx="1" fill="#0a0a0a" opacity="0.4"/>
+        </svg>
+      </div>
+      <span class="login-logo-text">Step Change · Admin</span>
+    </div>
+
+    <h1 class="login-heading">Welcome back</h1>
+    <p class="login-sub">Enter your admin password to continue.</p>
+
+    <div class="field">
+      <label>Admin Password</label>
+      <input type="password" id="admin-password" placeholder="••••••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="btn btn-primary" id="login-btn" onclick="handleLogin()">
+      Sign in
+    </button>
+
+    <div class="error-msg" id="login-error">Incorrect password. Please try again.</div>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="admin-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo-mark"></div>
+      <span class="topbar-title">Step Change Admin</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-outline" onclick="handleLogout()" style="padding: 7px 14px; font-size: 12px;">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Create client -->
+    <div class="create-panel">
+      <div class="create-panel-title">Add new client</div>
+      <div class="create-row">
+        <div class="field" style="margin:0">
+          <label>Client name</label>
+          <input type="text" id="client-name" placeholder="Azura Financial" oninput="updateSlugPreview()" onkeydown="if(event.key==='Enter') createClient()">
+          <div class="slug-preview" id="slug-preview">slug will appear here</div>
+        </div>
+        <div class="field" style="margin:0">
+          <label>Password for client</label>
+          <input type="text" id="client-password" placeholder="e.g. azura2025" onkeydown="if(event.key==='Enter') createClient()">
+        </div>
+        <div class="field" style="margin:0">
+          <label>Custom slug <span style="color: var(--text-dim); font-size:10px; text-transform:none">(optional)</span></label>
+          <input type="text" id="client-slug-override" placeholder="auto-generated" oninput="updateSlugPreview()" onkeydown="if(event.key==='Enter') createClient()">
+        </div>
+        <div>
+          <button class="btn btn-primary" id="create-btn" onclick="createClient()" style="white-space:nowrap; padding: 11px 20px;">
+            Add client
+          </button>
+        </div>
+      </div>
+      <div class="error-msg" id="create-error" style="margin-top:16px"></div>
+    </div>
+
+    <!-- Client list -->
+    <div class="section-header">
+      <div style="display:flex;align-items:center">
+        <span class="section-title">Clients</span>
+        <span class="section-count" id="client-count">—</span>
+      </div>
+      <button class="btn btn-outline" onclick="loadClients()" style="padding: 7px 14px; font-size: 12px;">Refresh</button>
+    </div>
+
+    <div class="clients-table" id="clients-table">
+      <div class="table-head">
+        <div>Client</div>
+        <div>Anthropic</div>
+        <div>HubSpot</div>
+        <div>GA4</div>
+        <div>URL</div>
+        <div></div>
+      </div>
+      <div class="loading-row"><span class="spinner"></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = window.location.origin;
+let sessionToken = localStorage.getItem('sc_admin_token');
+
+// ── Init ──
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionToken) tryShowAdmin();
+});
+
+async function tryShowAdmin() {
+  // Verify token is still valid
+  const res = await fetch('/api/admin?action=list-clients', {
+    headers: { 'Authorization': `Bearer ${sessionToken}` }
+  });
+  if (res.ok) {
+    showAdmin();
+    const data = await res.json();
+    renderClients(data.clients);
+  } else {
+    sessionToken = null;
+    localStorage.removeItem('sc_admin_token');
+  }
+}
+
+// ── Login ──
+document.getElementById('admin-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+
+async function handleLogin() {
+  const password = document.getElementById('admin-password').value;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-error');
+
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  err.classList.remove('show');
+
+  const res = await fetch('/api/admin?action=login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    sessionToken = data.token;
+    localStorage.setItem('sc_admin_token', sessionToken);
+    showAdmin();
+    loadClients();
+  } else {
+    err.classList.add('show');
+    btn.innerHTML = 'Sign in';
+    btn.disabled = false;
+  }
+}
+
+function showAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'block';
+}
+
+function handleLogout() {
+  localStorage.removeItem('sc_admin_token');
+  sessionToken = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('admin-password').value = '';
+}
+
+// ── Slug preview ──
+function slugify(name) {
+  return name.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 30);
+}
+
+function updateSlugPreview() {
+  const name = document.getElementById('client-name').value;
+  const override = document.getElementById('client-slug-override').value;
+  const preview = document.getElementById('slug-preview');
+  const slug = override ? slugify(override) : slugify(name);
+
+  if (slug) {
+    preview.textContent = `snapshot.stepchange.com/${slug}`;
+    preview.classList.add('ready');
+  } else {
+    preview.textContent = 'slug will appear here';
+    preview.classList.remove('ready');
+  }
+}
+
+// ── Create client ──
+async function createClient() {
+  const name = document.getElementById('client-name').value.trim();
+  const password = document.getElementById('client-password').value.trim();
+  const override = document.getElementById('client-slug-override').value.trim();
+  const err = document.getElementById('create-error');
+  const btn = document.getElementById('create-btn');
+
+  err.classList.remove('show');
+
+  if (!name || !password) {
+    err.textContent = 'Client name and password are required.';
+    err.classList.add('show');
+    return;
+  }
+
+  const slug = override ? slugify(override) : slugify(name);
+
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+
+  const res = await fetch('/api/admin?action=create-client', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${sessionToken}`
+    },
+    body: JSON.stringify({ name, slug, password })
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    document.getElementById('client-name').value = '';
+    document.getElementById('client-password').value = '';
+    document.getElementById('client-slug-override').value = '';
+    document.getElementById('slug-preview').textContent = 'slug will appear here';
+    document.getElementById('slug-preview').classList.remove('ready');
+    loadClients();
+  } else {
+    err.textContent = data.error || 'Failed to create client.';
+    err.classList.add('show');
+  }
+
+  btn.innerHTML = 'Add client';
+  btn.disabled = false;
+}
+
+// ── Load clients ──
+async function loadClients() {
+  const table = document.getElementById('clients-table');
+  const tbody = table.querySelector('.loading-row') || null;
+
+  const res = await fetch('/api/admin?action=list-clients', {
+    headers: { 'Authorization': `Bearer ${sessionToken}` }
+  });
+
+  if (!res.ok) return;
+  const data = await res.json();
+  renderClients(data.clients);
+}
+
+function renderClients(clients) {
+  const table = document.getElementById('clients-table');
+  const count = document.getElementById('client-count');
+
+  count.textContent = clients.length;
+
+  let html = `<div class="table-head">
+    <div>Client</div>
+    <div>Anthropic</div>
+    <div>CRM</div>
+    <div>GA4</div>
+    <div>URL</div>
+    <div></div>
+  </div>`;
+
+  if (clients.length === 0) {
+    html += `<div class="empty-state">
+      <div class="empty-state-icon">◻</div>
+      No clients yet. Add your first one above.
+    </div>`;
+  } else {
+    clients.forEach(client => {
+      const url = `${BASE}/${client.slug}`;
+      const anthropicPill = statusPill(client.hasAnthropic);
+      const crmPill = client.hasHubspot
+        ? `<span class="status-pill pill-connected">HubSpot</span>`
+        : client.hasActiveCampaign
+          ? `<span class="status-pill pill-connected">ActiveCampaign</span>`
+          : `<span class="status-pill pill-missing">Missing</span>`;
+      const ga4Pill = statusPill(client.hasGa4);
+
+      html += `<div class="client-row fade-in">
+        <div>
+          <div class="client-name">${escHtml(client.name)}</div>
+          <div class="client-slug">/${client.slug}</div>
+        </div>
+        <div>${anthropicPill}</div>
+        <div>${crmPill}</div>
+        <div>${ga4Pill}</div>
+        <div>
+          <button class="copy-btn" onclick="copyUrl(this, '${url}')">Copy URL</button>
+        </div>
+        <div>
+          <button class="btn btn-danger" style="padding:5px 10px; font-size:11px" onclick="confirmDelete(this, '${client.slug}')">Delete</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  table.innerHTML = html;
+}
+
+function statusPill(connected) {
+  if (connected) return `<span class="status-pill pill-connected">Connected</span>`;
+  return `<span class="status-pill pill-missing">Missing</span>`;
+}
+
+function copyUrl(btn, url) {
+  navigator.clipboard.writeText(url);
+  btn.textContent = 'Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy URL'; btn.classList.remove('copied'); }, 2000);
+}
+
+async function confirmDelete(btn, slug) {
+  if (!confirm(`Delete client "${slug}"? This cannot be undone.`)) return;
+
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  const res = await fetch(`/api/admin?action=delete-client&slug=${slug}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${sessionToken}` }
+  });
+
+  if (res.ok) {
+    loadClients();
+  } else {
+    btn.textContent = 'Delete';
+    btn.disabled = false;
+    alert('Failed to delete client.');
+  }
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
