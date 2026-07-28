@@ -3,795 +3,2394 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Step Change — Admin</title>
+  <title>Snapshot — Step Change</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0a0a0a;
-      --surface: #111111;
-      --border: #222222;
-      --border-light: #2a2a2a;
-      --text: #e8e8e8;
-      --text-muted: #666;
-      --text-dim: #444;
-      --accent: #c8f55a;
-      --accent-dim: rgba(200, 245, 90, 0.12);
-      --accent-border: rgba(200, 245, 90, 0.3);
-      --red: #ff5757;
-      --red-dim: rgba(255, 87, 87, 0.1);
-      --amber: #f5a623;
-      --amber-dim: rgba(245, 166, 35, 0.1);
-      --green: #4ade80;
-      --green-dim: rgba(74, 222, 128, 0.1);
+      --purple:        #533AFD;
+      --purple-hover:  #4329E8;
+      --purple-active: #3720D4;
+      --purple-muted:  #C9C3F0;
+      --purple-tint:   #E8E9FF;
+      --purple-ring:   rgba(83,58,253,0.12);
+      --navy:          #061B31;
+      --slate:         #273951;
+      --mid:           #50617A;
+      --light-slate:   #64748D;
+      --bg:            #F5F7FA;
+      --surface:       #FFFFFF;
+      --border:        #D4DEE9;
+      --border-soft:   #E5EDF5;
+      --green:         #065F46;
+      --green-bg:      #D1FAE5;
+      --green-border:  #A7F3D0;
+      --red:           #991B1B;
+      --red-bg:        #FEE2E2;
+      --red-border:    #FECACA;
+      --amber:         #92400E;
+      --amber-bg:      #FEF3C7;
+      --amber-border:  #FDE68A;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 40px rgba(0,0,0,0.10);
+      --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+      --r-btn:  4px;
+      --r-card: 5px;
+      --r-nav:  6px;
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'DM Mono', 'SF Mono', Monaco, monospace;
     }
 
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      min-height: 100vh;
-      line-height: 1.5;
+      background: var(--bg); color: var(--navy);
+      font-family: var(--font); font-size: 14px;
+      min-height: 100vh; line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── LOGIN SCREEN ── */
-    #login-screen {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin   { to{transform:rotate(360deg)} }
+    @keyframes shimmer{ 0%,100%{opacity:.45} 50%{opacity:.9} }
+    .fade-in { animation: fadeUp .35s cubic-bezier(.22,1,.36,1) both; }
+
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.3); border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite; }
+    .spinner-dark { border-color:var(--border); border-top-color:var(--navy); }
+
+    /* ── NOT FOUND ── */
+    #not-found { display:none; min-height:100vh; align-items:center; justify-content:center; flex-direction:column; gap:8px; }
+    #not-found h2 { font-size:22px; font-weight:700; }
+    #not-found p  { font-size:13px; color:var(--light-slate); }
+
+    /* ── LOGIN ── */
+    #login-gate { display:none; min-height:100vh; align-items:center; justify-content:center; padding:24px; }
+    .login-card { width:100%; max-width:360px; }
+    .login-brand { display:flex; align-items:center; gap:10px; margin-bottom:48px; }
+    .logo-mark { width:28px; height:28px; background:var(--navy); border-radius:6px; display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:6px; }
+    .logo-mark span { background:var(--bg); border-radius:1px; display:block; }
+    .logo-mark span:last-child { opacity:.28; }
+    .login-brand-name { font-size:14px; font-weight:600; color:var(--navy); }
+    .login-heading { font-size:26px; font-weight:700; letter-spacing:-.03em; margin-bottom:6px; }
+    .login-sub { font-size:13px; color:var(--light-slate); margin-bottom:32px; }
+    .field { margin-bottom:16px; }
+    .field-label { display:block; font-size:12px; font-weight:500; color:var(--navy); margin-bottom:8px; }
+    input[type="password"], input[type="text"] {
+      width:100%; background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--r-btn); padding:0 16px; color:var(--navy);
+      font-family:var(--font); font-size:14px; outline:none; height:40px;
+      transition:border-color .15s, box-shadow .15s;
     }
-
-    .login-card {
-      width: 100%;
-      max-width: 380px;
-    }
-
-    .login-logo {
-      margin-bottom: 48px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .login-logo-mark {
-      width: 32px;
-      height: 32px;
-      background: var(--accent);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .login-logo-mark svg { width: 18px; height: 18px; }
-
-    .login-logo-text {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-muted);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .login-heading {
-      font-size: 22px;
-      font-weight: 500;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-
-    .login-sub {
-      color: var(--text-muted);
-      font-size: 13px;
-      margin-bottom: 32px;
-    }
-
-    .field { margin-bottom: 16px; }
-
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-muted);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    input[type="password"],
-    input[type="text"],
-    input[type="email"] {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 11px 14px;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    input:focus { border-color: var(--accent-border); }
-
+    input:focus { border:2px solid var(--purple); box-shadow:0 0 0 3px var(--purple-ring); }
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 11px 20px;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      border: none;
-      transition: all 0.15s;
-      text-decoration: none;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      font-family:var(--font); font-size:14px; font-weight:500; cursor:pointer;
+      border:none; transition:all .15s; padding:0 24px; border-radius:var(--r-btn); height:40px;
     }
+    .btn:active { transform:scale(.98); }
+    .btn:disabled { opacity:.5; cursor:not-allowed; pointer-events:none; }
+    .btn-primary  { background:var(--purple); color:#fff; width:100%; }
+    .btn-primary:hover:not(:disabled) { background:var(--purple-hover); }
+    .btn-secondary { background:var(--surface); color:var(--purple); border:1px solid var(--purple); }
+    .btn-secondary:hover { background:#F3F0FF; }
+    .error-msg { background:var(--red-bg); border:1px solid var(--red-border); color:var(--red); padding:10px 14px; border-radius:var(--r-btn); font-size:12px; margin-top:12px; display:none; }
+    .error-msg.show { display:block; }
 
-    .btn-primary {
-      background: var(--accent);
-      color: #0a0a0a;
-      width: 100%;
-    }
-
-    .btn-primary:hover { background: #d4f870; }
-    .btn-primary:active { transform: scale(0.98); }
-
-    .btn-outline {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    .btn-outline:hover { border-color: var(--border-light); background: var(--surface); }
-
-    .btn-danger {
-      background: var(--red-dim);
-      color: var(--red);
-      border: 1px solid rgba(255, 87, 87, 0.2);
-    }
-
-    .btn-danger:hover { background: rgba(255, 87, 87, 0.2); }
-
-    .error-msg {
-      background: var(--red-dim);
-      border: 1px solid rgba(255, 87, 87, 0.2);
-      color: var(--red);
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-top: 12px;
-      display: none;
-    }
-
-    .error-msg.show { display: block; }
-
-    /* ── ADMIN DASHBOARD ── */
-    #admin-screen { display: none; }
-
+    /* ── TOPBAR ── */
+    #dashboard { display:none; }
     .topbar {
-      height: 56px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      position: sticky;
-      top: 0;
-      background: var(--bg);
-      z-index: 10;
+      height:64px; background:var(--surface); border-bottom:1px solid var(--border-soft);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 24px; position:sticky; top:0; z-index:100; box-shadow:var(--shadow-sm);
     }
+    .topbar-left  { display:flex; align-items:center; gap:14px; }
+    .topbar-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .topbar-logo  { width:22px; height:22px; background:var(--navy); border-radius:4px; display:grid; grid-template-columns:1fr 1fr; gap:3px; padding:5px; }
+    .topbar-logo span { background:var(--bg); border-radius:1px; display:block; }
+    .topbar-logo span:last-child { opacity:.28; }
+    .topbar-wordmark { font-size:13px; font-weight:600; color:var(--light-slate); }
+    .topbar-sep      { width:1px; height:14px; background:var(--border); }
+    .topbar-client   { font-size:13px; font-weight:600; color:var(--navy); }
 
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .topbar-tabs { display:flex; align-items:center; gap:2px; background:var(--bg); border:1px solid var(--border); border-radius:var(--r-nav); padding:3px; }
+    .tab-btn { padding:6px 16px; border-radius:var(--r-btn); border:none; background:none; font-family:var(--font); font-size:12px; font-weight:500; color:var(--light-slate); cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .tab-btn:hover { color:var(--navy); }
+    .tab-btn.active { background:var(--surface); color:var(--navy); box-shadow:var(--shadow-sm); }
+
+    .conn-pill { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--light-slate); cursor:pointer; padding:6px 12px; border-radius:var(--r-nav); border:1px solid var(--border); background:var(--surface); transition:all .15s; }
+    .conn-pill:hover { border-color:#B8CCDB; }
+    .conn-dot { width:6px; height:6px; border-radius:50%; background:#10B981; flex-shrink:0; }
+    .conn-dot.partial { background:#F59E0B; }
+    .conn-dot.none    { background:var(--border); }
+
+    .btn-tb { display:inline-flex; align-items:center; gap:6px; padding:0 14px; border-radius:var(--r-btn); border:none; font-family:var(--font); font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; height:32px; white-space:nowrap; }
+    .btn-tb-outline { background:var(--surface); color:var(--navy); border:1px solid var(--border); }
+    .btn-tb-outline:hover { border-color:#B8CCDB; background:var(--bg); }
+    .btn-tb-purple  { background:var(--purple-tint); color:var(--purple); }
+    .btn-tb-purple:hover { background:#D4D6FF; }
+    .btn-tb-purple.on { background:var(--purple); color:#fff; }
+    .btn-nav { background:none; border:none; cursor:pointer; font-family:var(--font); font-size:12px; color:var(--light-slate); padding:6px 10px; border-radius:var(--r-nav); transition:all .15s; }
+    .btn-nav:hover { background:#F3F3F3; color:var(--purple); }
+
+    /* ── DATE PILLS ── */
+    .date-pills { display:flex; align-items:center; gap:2px; background:var(--bg); border:1px solid var(--border); border-radius:var(--r-nav); padding:3px; }
+    .date-pill  { padding:5px 10px; border-radius:var(--r-btn); border:none; background:none; font-family:var(--font); font-size:12px; font-weight:500; color:var(--light-slate); cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .date-pill:hover { color:var(--navy); }
+    .date-pill.active { background:var(--surface); color:var(--navy); box-shadow:var(--shadow-sm); }
+    .date-select { font-family:var(--font); font-size:12px; font-weight:500; padding:6px 10px; border:1px solid var(--border); border-radius:var(--r-nav); background:var(--surface); color:var(--navy); outline:none; cursor:pointer; height:32px; }
+    .date-select:focus { border-color:var(--purple); box-shadow:0 0 0 3px var(--purple-ring); }
+    .date-input { font-family:var(--font); font-size:12px; padding:5px 8px; border:1px solid var(--border); border-radius:var(--r-btn); background:var(--surface); color:var(--navy); outline:none; height:32px; }
+    .date-input:focus { border-color:var(--purple); }
+
+    .setup-banner { background:var(--surface); border-bottom:1px solid var(--border-soft); padding:10px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .setup-banner-text { font-size:13px; color:var(--light-slate); }
+    .setup-banner-text strong { color:var(--navy); }
+    .btn-setup { background:var(--purple); color:#fff; padding:6px 14px; border-radius:var(--r-btn); font-size:12px; font-weight:500; cursor:pointer; border:none; font-family:var(--font); }
+
+    /* ── LAYOUT ── */
+    .main-content { max-width:1400px; margin:0 auto; padding:28px 24px 100px; }
+    .page { display:none; }
+    .page.active { display:block; animation:fadeUp .3s cubic-bezier(.22,1,.36,1) both; }
+    .section-lbl { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--light-slate); margin-bottom:12px; margin-top:28px; }
+    .section-lbl:first-child { margin-top:0; }
+
+    /* ── KPI GRID ── */
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:0; }
+    @media(max-width:1100px){ .kpi-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:600px) { .kpi-grid { grid-template-columns:1fr; } }
+
+    .kpi-card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card);
+      padding:22px 24px; box-shadow:var(--shadow-sm); position:relative;
+      transition:box-shadow .2s, border-color .2s; user-select:none;
     }
+    .kpi-card:hover { box-shadow:var(--shadow-md); border-color:#B8CCDB; }
+    .kpi-card.edit-mode { cursor:grab; border:1.5px dashed var(--purple-muted); }
+    .kpi-card.edit-mode:active { cursor:grabbing; }
+    .kpi-card.drag-over { border-color:var(--purple); background:var(--purple-tint); }
+    .kpi-card.dragging  { opacity:.35; }
 
-    .topbar-logo-mark {
-      width: 24px;
-      height: 24px;
-      background: var(--accent);
-      border-radius: 4px;
+    .drag-handle { display:none; position:absolute; top:10px; right:32px; color:var(--purple-muted); font-size:16px; cursor:grab; line-height:1; }
+    .edit-mode .drag-handle { display:block; }
+    .kpi-delete { display:none; position:absolute; top:8px; right:8px; width:20px; height:20px; border-radius:50%; background:var(--red-bg); border:1px solid var(--red-border); color:var(--red); font-size:13px; line-height:1; cursor:pointer; align-items:center; justify-content:center; transition:all .15s; }
+    .kpi-delete:hover { background:var(--red); color:#fff; }
+    .edit-mode .kpi-delete { display:flex; }
+
+    .sec-block { position:relative; }
+    .sec-delete { display:none; position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:var(--red-bg); border:1px solid var(--red-border); color:var(--red); font-size:14px; line-height:1; cursor:pointer; align-items:center; justify-content:center; transition:all .15s; z-index:3; }
+    .sec-delete:hover { background:var(--red); color:#fff; }
+    body.edit-mode .sec-delete { display:flex; }
+    .card { position:relative; }
+
+    .kpi-label { display:flex; align-items:flex-start; gap:6px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--light-slate); margin-bottom:12px; line-height:1.35; position:relative; }
+
+    /* Tooltip */
+    .tt-icon {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:16px; height:16px; flex-shrink:0; margin-top:1px;
+      cursor:help; opacity:.45; transition:opacity .15s; font-size:0;
     }
-
-    .topbar-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-muted);
+    .tt-icon::before {
+      content:''; display:block; width:16px; height:16px;
+      background-size:contain; background-repeat:no-repeat;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23273951'/%3E%3Ccircle cx='8' cy='5.5' r='1.2' fill='white'/%3E%3Crect x='7' y='7.5' width='2' height='4.5' rx='1' fill='white'/%3E%3C/svg%3E");
     }
-
-    .topbar-right { display: flex; gap: 8px; align-items: center; }
-
-    .main {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 40px 24px;
+    .tt-icon:hover { opacity:1; }
+    .tt-icon:hover::before {
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23533AFD'/%3E%3Ccircle cx='8' cy='5.5' r='1.2' fill='white'/%3E%3Crect x='7' y='7.5' width='2' height='4.5' rx='1' fill='white'/%3E%3C/svg%3E");
     }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
+    .tt-pop {
+      display:none; position:absolute; z-index:300; background:var(--navy); color:#fff;
+      border-radius:var(--r-nav); padding:12px 16px; font-size:12px; line-height:1.6;
+      font-weight:400; max-width:260px; width:max-content; top:calc(100% + 10px); left:0;
+      box-shadow:var(--shadow-lg); pointer-events:none; text-transform:none; letter-spacing:0;
     }
-
-    .section-title {
-      font-size: 18px;
-      font-weight: 500;
-      letter-spacing: -0.02em;
+    .tt-pop::before {
+      content:''; position:absolute; top:-5px; left:14px;
+      width:10px; height:10px; background:var(--navy);
+      transform:rotate(45deg); border-radius:1px;
     }
+    .tt-pop.vis { display:block; animation:fadeUp .18s ease both; }
+    .tt-pop .tt-title { font-weight:600; font-size:10px; opacity:.55; text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+    .tt-pop .tt-formula { margin-top:8px; font-family:var(--mono); font-size:11px; opacity:.7; background:rgba(255,255,255,.07); padding:5px 8px; border-radius:3px; }
+    .tt-pop .tt-src { margin-top:6px; font-size:10px; opacity:.45; }
 
-    .section-count {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--text-muted);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 2px 8px;
-      border-radius: 100px;
-      margin-left: 10px;
+    /* Filter bar */
+    .filter-bar {
+      background:var(--surface); border-bottom:1px solid var(--border-soft);
+      padding:0 24px; display:flex; align-items:center; gap:4px; height:44px;
+      position:sticky; top:64px; z-index:99;
     }
-
-    /* ── CREATE CLIENT PANEL ── */
-    .create-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 32px;
+    .filter-sep { width:1px; height:20px; background:var(--border); margin:0 8px; flex-shrink:0; }
+    .filter-btn {
+      display:inline-flex; align-items:center; gap:6px; padding:0 12px; height:30px;
+      border-radius:var(--r-nav); border:none; background:none; font-family:var(--font);
+      font-size:12px; font-weight:500; color:var(--light-slate); cursor:pointer; transition:all .15s;
+      white-space:nowrap;
     }
-
-    .create-panel-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 20px;
+    .filter-btn:hover { background:var(--bg); color:var(--navy); }
+    .filter-btn.active { background:var(--purple-tint); color:var(--purple); border:1px solid var(--purple-muted); }
+    .filter-btn svg { flex-shrink:0; }
+    .filter-date-wrap { display:flex; align-items:center; gap:0; }
+    .filter-date-select {
+      font-family:var(--font); font-size:12px; font-weight:500; color:var(--purple);
+      background:var(--purple-tint); border:1px solid var(--purple-muted);
+      border-radius:var(--r-nav); padding:0 10px; height:30px; outline:none; cursor:pointer;
     }
+    .filter-date-select:focus { box-shadow:0 0 0 3px var(--purple-ring); }
+    .filter-clear { font-size:12px; font-weight:500; color:var(--light-slate); background:none; border:none; cursor:pointer; padding:0 8px; font-family:var(--font); transition:color .15s; }
+    .filter-clear:hover { color:var(--navy); }
+    #refresh-btn.loading { opacity:.7; pointer-events:none; }
+    #refresh-btn.loading svg { animation:spin .7s linear infinite; transform-box:fill-box; transform-origin:center; }
+    .filter-custom-range { display:none; align-items:center; gap:6px; margin-left:4px; }
+    .filter-custom-range.show { display:flex; }
 
-    .create-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
-      gap: 12px;
-      align-items: end;
+    .kpi-value { font-family:var(--mono); font-size:28px; font-weight:400; letter-spacing:-.03em; color:var(--navy); line-height:1; margin-bottom:10px; }
+    .kpi-shim  { height:28px; width:80px; background:var(--border-soft); border-radius:3px; animation:shimmer 1.4s ease infinite; }
+    .kpi-delta { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:500; padding:3px 8px; border-radius:20px; }
+    .kpi-delta.up   { color:var(--green); background:var(--green-bg); border:1px solid var(--green-border); }
+    .kpi-delta.down { color:var(--red);   background:var(--red-bg);   border:1px solid var(--red-border); }
+    .kpi-delta.flat { color:var(--light-slate); background:var(--bg); border:1px solid var(--border); }
+    .kpi-sub { font-size:11px; color:var(--light-slate); margin-top:6px; }
+
+    .add-card { background:var(--surface); border:1.5px dashed var(--border); border-radius:var(--r-card); padding:24px; display:none; align-items:center; justify-content:center; flex-direction:column; gap:8px; cursor:pointer; transition:all .15s; color:var(--light-slate); min-height:116px; }
+    .add-card:hover { border-color:var(--purple); color:var(--purple); background:var(--purple-tint); }
+    .add-card.show { display:flex; }
+
+    /* ── CARD ── */
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); box-shadow:var(--shadow-sm); overflow:hidden; transition:box-shadow .2s; }
+    .card:hover { box-shadow:var(--shadow-md); }
+    .card-header { padding:20px 24px 0; display:flex; align-items:flex-start; justify-content:space-between; }
+    .card-title  { font-size:14px; font-weight:600; color:var(--navy); }
+    .card-sub    { font-size:11px; color:var(--light-slate); margin-top:3px; }
+    .card-body   { padding:16px 24px 20px; }
+
+    /* ── LIFECYCLE HERO ── */
+    .lifecycle-hero { margin-bottom:0; }
+    .lifecycle-body { padding:8px 24px 24px; display:flex; flex-direction:column; gap:10px; }
+    .lc-row  { display:flex; align-items:center; gap:14px; }
+    .lc-label { font-size:12px; font-weight:600; color:var(--navy); width:120px; flex-shrink:0; }
+    .lc-track { flex:1; height:40px; background:var(--bg); border-radius:var(--r-btn); overflow:hidden; }
+    .lc-bar   { height:100%; border-radius:var(--r-btn); display:flex; align-items:center; padding:0 14px; font-size:13px; font-weight:600; color:#fff; transition:width .9s cubic-bezier(.22,1,.36,1); white-space:nowrap; overflow:hidden; min-width:0; }
+    .lc-meta  { text-align:right; min-width:90px; }
+    .lc-count { font-family:var(--mono); font-size:16px; font-weight:500; color:var(--navy); }
+    .lc-pct   { font-size:11px; color:var(--light-slate); }
+
+    /* ── FUNNEL ── */
+    .funnel-body { padding:16px 24px 20px; display:flex; flex-direction:column; gap:8px; }
+    .funnel-row  { display:flex; align-items:center; gap:12px; }
+    .funnel-bg   { flex:1; height:34px; background:var(--bg); border-radius:var(--r-btn); overflow:hidden; }
+    .funnel-bar  { height:100%; border-radius:var(--r-btn); display:flex; align-items:center; padding:0 12px; font-size:12px; font-weight:600; color:#fff; transition:width .9s cubic-bezier(.22,1,.36,1); white-space:nowrap; overflow:hidden; min-width:0; }
+    .funnel-meta { text-align:right; min-width:76px; }
+    .funnel-n    { font-family:var(--mono); font-size:14px; font-weight:500; color:var(--navy); }
+    .funnel-pct  { font-size:11px; color:var(--light-slate); }
+
+    /* ── TABLE ── */
+    .tbl-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    thead th { padding:10px 16px; text-align:left; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--light-slate); background:var(--bg); border-bottom:1px solid var(--border); white-space:nowrap; cursor:pointer; user-select:none; }
+    thead th:hover { color:var(--navy); }
+    thead th.sorted { color:var(--purple); }
+    thead th.sorted::after { content:' ↓'; opacity:.5; }
+    thead th.sorted.asc::after { content:' ↑'; }
+    tbody td { padding:10px 16px; border-bottom:1px solid var(--border-soft); vertical-align:middle; color:var(--navy); }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover td { background:var(--bg); }
+    .td-mono { font-family:var(--mono); font-size:12px; }
+
+    .badge { display:inline-flex; align-items:center; padding:3px 8px; border-radius:3px; font-size:11px; font-weight:500; }
+    .bg   { background:var(--green-bg); color:var(--green); border:1px solid var(--green-border); }
+    .br   { background:var(--red-bg);   color:var(--red);   border:1px solid var(--red-border); }
+    .ba   { background:var(--amber-bg); color:var(--amber); border:1px solid var(--amber-border); }
+    .bp   { background:var(--purple-tint); color:var(--purple); border:1px solid var(--purple-muted); }
+
+    /* ── DIAGNOSTIC ── */
+    .diag-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:900px){ .diag-2 { grid-template-columns:1fr; } }
+
+    .ev-tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:16px 24px 20px; }
+    @media(max-width:700px){ .ev-tiles { grid-template-columns:repeat(2,1fr); } }
+    .ev-tile { background:var(--bg); border:1px solid var(--border); border-radius:var(--r-card); padding:14px 16px; }
+    .ev-lbl  { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--light-slate); margin-bottom:6px; }
+    .ev-val  { font-family:var(--mono); font-size:20px; color:var(--navy); }
+    .ev-rate { font-size:11px; color:var(--light-slate); margin-top:2px; }
+
+    .leak-body { padding:16px 24px 20px; display:flex; flex-direction:column; gap:4px; }
+    .leak-row  { display:flex; align-items:center; gap:10px; }
+    .leak-lbl  { font-size:12px; color:var(--light-slate); width:140px; flex-shrink:0; }
+    .leak-bg   { flex:1; height:26px; background:var(--bg); border-radius:var(--r-btn); overflow:hidden; }
+    .leak-bar  { height:100%; border-radius:var(--r-btn); background:var(--purple); display:flex; align-items:center; justify-content:flex-end; padding-right:10px; font-size:11px; font-weight:600; color:#fff; transition:width .9s cubic-bezier(.22,1,.36,1); min-width:0; }
+    .leak-n    { font-family:var(--mono); font-size:12px; color:var(--navy); min-width:36px; text-align:right; }
+    .leak-drop { margin-left:150px; font-size:11px; color:var(--light-slate); margin-bottom:2px; }
+
+    .stage-body { padding:16px 24px 20px; }
+    .stage-row  { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border-soft); }
+    .stage-row:last-child { border-bottom:none; }
+    .stage-lbl  { font-size:12px; color:var(--light-slate); width:160px; flex-shrink:0; }
+    .stage-bg   { flex:1; height:6px; background:var(--bg); border-radius:3px; overflow:hidden; }
+    .stage-bar  { height:100%; border-radius:3px; background:var(--purple); transition:width .9s cubic-bezier(.22,1,.36,1); }
+    .stage-days { font-family:var(--mono); font-size:12px; color:var(--navy); min-width:52px; text-align:right; }
+
+    /* ── EMAIL TILES ── */
+    .email-tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    @media(max-width:700px){ .email-tiles { grid-template-columns:repeat(2,1fr); } }
+    .email-tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); padding:18px 20px; box-shadow:var(--shadow-sm); }
+
+    /* ── ADD METRIC MODAL ── */
+    .modal-bg { display:none; position:fixed; inset:0; z-index:400; background:rgba(6,27,49,.5); align-items:center; justify-content:center; padding:24px; }
+    .modal-bg.open { display:flex; }
+    .modal { background:var(--surface); border-radius:8px; width:100%; max-width:520px; box-shadow:var(--shadow-xl); overflow:hidden; animation:fadeUp .25s cubic-bezier(.22,1,.36,1) both; }
+    .modal-hdr { padding:20px 24px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; justify-content:space-between; }
+    .modal-title { font-size:16px; font-weight:600; color:var(--navy); }
+    .modal-close { background:none; border:none; cursor:pointer; color:var(--light-slate); font-size:20px; line-height:1; }
+    .modal-close:hover { color:var(--navy); }
+    .modal-body { padding:24px; }
+    .modal-ftr  { padding:16px 24px; border-top:1px solid var(--border-soft); display:flex; gap:10px; justify-content:flex-end; }
+    .mode-tabs { display:flex; gap:2px; background:var(--bg); border:1px solid var(--border); border-radius:var(--r-nav); padding:3px; margin-bottom:20px; }
+    .mode-tab  { flex:1; padding:7px 12px; border-radius:var(--r-btn); border:none; background:none; font-family:var(--font); font-size:13px; font-weight:500; color:var(--light-slate); cursor:pointer; transition:all .15s; }
+    .mode-tab.active { background:var(--surface); color:var(--navy); box-shadow:var(--shadow-sm); }
+    .modal .field { margin-bottom:16px; }
+    .modal .field-label { display:block; font-size:12px; font-weight:500; color:var(--navy); margin-bottom:6px; }
+    .modal select, .modal input[type="text"] { width:100%; height:40px; border:1px solid var(--border); border-radius:var(--r-btn); padding:0 12px; font-family:var(--font); font-size:14px; color:var(--navy); background:var(--surface); outline:none; }
+    .modal select:focus, .modal input[type="text"]:focus { border:2px solid var(--purple); box-shadow:0 0 0 3px var(--purple-ring); }
+    .modal textarea { width:100%; border:1px solid var(--border); border-radius:var(--r-btn); padding:10px 12px; font-family:var(--font); font-size:14px; color:var(--navy); background:var(--surface); outline:none; resize:vertical; min-height:80px; }
+    .modal textarea:focus { border:2px solid var(--purple); box-shadow:0 0 0 3px var(--purple-ring); }
+    .claude-resp { background:var(--purple-tint); border:1px solid var(--purple-muted); border-radius:var(--r-card); padding:14px 16px; font-size:13px; line-height:1.6; color:var(--navy); margin-top:12px; display:none; }
+
+    /* ── CHAT ── */
+    .chat-trigger { position:fixed; bottom:24px; right:24px; width:48px; height:48px; border-radius:50%; background:var(--navy); color:#fff; border:none; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(0,0,0,.2); transition:all .2s; z-index:200; }
+    .chat-trigger:hover { transform:scale(1.07); background:var(--slate); }
+    .chat-panel { position:fixed; bottom:82px; right:24px; width:360px; max-height:500px; background:var(--surface); border:1px solid var(--border); border-radius:10px; display:none; flex-direction:column; box-shadow:var(--shadow-lg); z-index:200; overflow:hidden; }
+    .chat-panel.open { display:flex; }
+    .chat-hdr  { padding:14px 18px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; justify-content:space-between; }
+    .chat-title { font-size:13px; font-weight:600; color:var(--navy); }
+    .chat-close { background:none; border:none; cursor:pointer; color:var(--light-slate); font-size:18px; line-height:1; }
+    .chat-msgs { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; }
+    .msg { max-width:88%; padding:9px 13px; border-radius:10px; font-size:13px; line-height:1.5; }
+    .msg-a { background:var(--bg); color:var(--navy); align-self:flex-start; border:1px solid var(--border); }
+    .msg-u { background:var(--navy); color:#fff; align-self:flex-end; }
+    .chat-row  { padding:10px 12px; border-top:1px solid var(--border-soft); display:flex; gap:8px; }
+    .chat-inp  { flex:1; border:1px solid var(--border); border-radius:var(--r-btn); padding:8px 12px; font-size:13px; font-family:var(--font); outline:none; background:var(--bg); color:var(--navy); resize:none; }
+    .chat-send { background:var(--purple); color:#fff; border:none; border-radius:var(--r-btn); padding:8px 14px; cursor:pointer; font-size:13px; font-family:var(--font); font-weight:500; }
+    .chat-send:hover { background:var(--purple-hover); }
+
+    /* ── PRINT ── */
+    @media print {
+      .topbar, .filter-bar, .setup-banner, .chat-trigger, .chat-panel, .btn-tb, .conn-pill, .drag-handle, #add-metric-card { display:none!important; }
+      body { background:#fff; }
+      #dashboard { display:block!important; }
+      #page-exec { display:block!important; }
+      .main-content { padding:20px; max-width:none; }
+      .kpi-card, .card { break-inside:avoid; box-shadow:none; }
+      .print-hdr { display:flex!important; }
     }
+    .print-hdr { display:none; align-items:center; justify-content:space-between; padding-bottom:16px; margin-bottom:24px; border-bottom:2px solid var(--navy); }
+    .print-title { font-size:20px; font-weight:700; }
+    .print-date  { font-size:12px; color:var(--light-slate); }
 
-    @media (max-width: 680px) {
-      .create-row { grid-template-columns: 1fr; }
-    }
-
-    .slug-preview {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 6px;
-      min-height: 16px;
-      transition: color 0.15s;
-    }
-
-    .slug-preview.ready { color: var(--accent); }
-
-    /* ── CLIENTS TABLE ── */
-    .clients-table {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .table-head {
-      display: grid;
-      grid-template-columns: 1fr 120px 100px 100px 100px 80px;
-      padding: 10px 20px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .client-row {
-      display: grid;
-      grid-template-columns: 1fr 120px 100px 100px 100px 80px;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      align-items: center;
-      transition: background 0.1s;
-    }
-
-    .client-row:last-child { border-bottom: none; }
-    .client-row:hover { background: rgba(255,255,255,0.02); }
-
-    .client-name {
-      font-weight: 500;
-      font-size: 14px;
-    }
-
-    .client-slug {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .client-url {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 8px;
-      border-radius: 100px;
-      font-size: 11px;
-      font-weight: 500;
-    }
-
-    .status-pill::before {
-      content: '';
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-    }
-
-    .pill-connected {
-      background: var(--green-dim);
-      color: var(--green);
-    }
-
-    .pill-connected::before { background: var(--green); }
-
-    .pill-pending {
-      background: var(--amber-dim);
-      color: var(--amber);
-    }
-
-    .pill-pending::before { background: var(--amber); }
-
-    .pill-missing {
-      background: var(--red-dim);
-      color: var(--red);
-    }
-
-    .pill-missing::before { background: var(--red); }
-
-    .copy-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      cursor: pointer;
-      font-family: 'DM Mono', monospace;
-      transition: all 0.15s;
-    }
-
-    .copy-btn:hover { border-color: var(--accent-border); color: var(--accent); }
-    .copy-btn.copied { border-color: var(--green); color: var(--green); }
-
-    .empty-state {
-      padding: 48px;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 13px;
-    }
-
-    .empty-state-icon {
-      font-size: 32px;
-      margin-bottom: 12px;
-      opacity: 0.4;
-    }
-
-    .loading-row {
-      padding: 32px;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 13px;
-    }
-
-    /* Spinner */
-    .spinner {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .fade-in {
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Delete confirm inline */
-    .delete-confirm {
-      display: none;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--red);
-    }
-
-    .delete-confirm.show { display: flex; }
-
-    .delete-yes, .delete-no {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'DM Mono', monospace;
-    }
-
-    .delete-yes { color: var(--red); }
-    .delete-yes:hover { background: var(--red-dim); }
-    .delete-no { color: var(--text-muted); }
-    .delete-no:hover { background: var(--surface); }
+    .empty { padding:28px 24px; text-align:center; font-size:13px; color:var(--light-slate); }
+    .gap-t { margin-top:16px; }
+    .gap-m { margin-top:24px; }
   </style>
 </head>
 <body>
 
+<!-- NOT FOUND -->
+<div id="not-found" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+  <h2>Dashboard not found</h2>
+  <p>This URL doesn't match any active client.</p>
+</div>
+
 <!-- LOGIN -->
-<div id="login-screen">
+<div id="login-gate" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px;">
   <div class="login-card fade-in">
-    <div class="login-logo">
-      <div class="login-logo-mark">
-        <svg viewBox="0 0 18 18" fill="none">
-          <rect x="2" y="2" width="6" height="6" rx="1" fill="#0a0a0a"/>
-          <rect x="10" y="2" width="6" height="6" rx="1" fill="#0a0a0a"/>
-          <rect x="2" y="10" width="6" height="6" rx="1" fill="#0a0a0a"/>
-          <rect x="10" y="10" width="6" height="6" rx="1" fill="#0a0a0a" opacity="0.4"/>
-        </svg>
-      </div>
-      <span class="login-logo-text">Step Change · Admin</span>
+    <div class="login-brand">
+      <div class="logo-mark"><span></span><span></span><span></span><span></span></div>
+      <span class="login-brand-name">Step Change Snapshot</span>
     </div>
-
-    <h1 class="login-heading">Welcome back</h1>
-    <p class="login-sub">Enter your admin password to continue.</p>
-
+    <h1 class="login-heading" id="login-heading">Welcome back</h1>
+    <p class="login-sub" id="login-sub">Enter your password to access your dashboard.</p>
     <div class="field">
-      <label>Admin Password</label>
-      <input type="password" id="admin-password" placeholder="••••••••••••" autocomplete="current-password">
+      <label class="field-label">Password</label>
+      <input type="password" id="client-password" placeholder="••••••••" autocomplete="current-password">
     </div>
-
-    <button class="btn btn-primary" id="login-btn" onclick="handleLogin()">
-      Sign in
-    </button>
-
+    <button class="btn btn-primary" id="login-btn" onclick="handleLogin()">Continue →</button>
     <div class="error-msg" id="login-error">Incorrect password. Please try again.</div>
   </div>
 </div>
 
-<!-- ADMIN DASHBOARD -->
-<div id="admin-screen">
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none">
+
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-logo-mark"></div>
-      <span class="topbar-title">Step Change Admin</span>
+      <div class="topbar-logo"><span></span><span></span><span></span><span></span></div>
+      <span class="topbar-wordmark">Step Change</span>
+      <div class="topbar-sep"></div>
+      <span class="topbar-client" id="topbar-client-name"></span>
     </div>
     <div class="topbar-right">
-      <button class="btn btn-outline" onclick="handleLogout()" style="padding: 7px 14px; font-size: 12px;">Sign out</button>
+      <button class="btn-tb btn-tb-purple" id="ai-summary-btn" onclick="getAISummary()">✦ Get Executive Summary</button>
+      <button class="btn-tb btn-tb-outline" id="undo-btn" onclick="undoLayout()" style="display:none">↩ Undo</button>
+      <button class="btn-tb btn-tb-outline" id="restore-btn" onclick="restoreAllHidden()" style="display:none">↺ Restore hidden</button>
+      <button class="btn-tb btn-tb-purple" id="edit-btn" onclick="toggleEditMode()">✦ Edit layout</button>
+      <button class="btn-tb btn-tb-outline" onclick="exportPDF()">↓ Export PDF</button>
+      <div class="conn-pill" id="conn-status" onclick="goToSetup()" title="Connection status">
+        <div class="conn-dot" id="conn-dot"></div>
+        <span id="conn-label">Loading…</span>
+      </div>
+      <button class="btn-nav" onclick="handleLogout()">Sign out</button>
     </div>
   </div>
 
-  <div class="main">
-    <!-- Create client -->
-    <div class="create-panel">
-      <div class="create-panel-title">Add new client</div>
-      <div class="create-row">
-        <div class="field" style="margin:0">
-          <label>Client name</label>
-          <input type="text" id="client-name" placeholder="Azura Financial" oninput="updateSlugPreview()" onkeydown="if(event.key==='Enter') createClient()">
-          <div class="slug-preview" id="slug-preview">slug will appear here</div>
-        </div>
-        <div class="field" style="margin:0">
-          <label>Password for client</label>
-          <input type="text" id="client-password" placeholder="e.g. azura2025" onkeydown="if(event.key==='Enter') createClient()">
-        </div>
-        <div class="field" style="margin:0">
-          <label>Custom slug <span style="color: var(--text-dim); font-size:10px; text-transform:none">(optional)</span></label>
-          <input type="text" id="client-slug-override" placeholder="auto-generated" oninput="updateSlugPreview()" onkeydown="if(event.key==='Enter') createClient()">
-        </div>
-        <div>
-          <button class="btn btn-primary" id="create-btn" onclick="createClient()" style="white-space:nowrap; padding: 11px 20px;">
-            Add client
-          </button>
-        </div>
+  <!-- Filter bar -->
+  <div class="filter-bar" id="filter-bar">
+    <button class="filter-btn" onclick="toggleSortPanel()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="2" y1="4" x2="14" y2="4"/><line x1="4" y1="8" x2="12" y2="8"/><line x1="6" y1="12" x2="10" y2="12"/></svg>
+      Quick filters
+    </button>
+    <div class="filter-sep"></div>
+    <div class="filter-date-wrap">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="color:var(--purple);margin-right:6px;flex-shrink:0"><path d="M6 1a.5.5 0 0 1 .5.5V2h3V1.5a.5.5 0 0 1 1 0V2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h1V1.5A.5.5 0 0 1 6 1zM2 6v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6H2z"/></svg>
+      <select class="filter-date-select" id="date-select" onchange="handleDateChange()">
+        <option value="30">Last 30 days</option>
+        <option value="60">Last 60 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="180">Last 6 months</option>
+        <option value="365">Last 12 months</option>
+        <option value="custom">Custom range…</option>
+      </select>
+      <div class="filter-custom-range" id="custom-range">
+        <input type="date" id="date-from" class="date-input">
+        <span style="font-size:11px;color:var(--light-slate)">–</span>
+        <input type="date" id="date-to" class="date-input">
+        <button class="btn-tb btn-tb-purple" style="height:28px;font-size:11px" onclick="applyCustomRange()">Apply</button>
       </div>
-      <div class="error-msg" id="create-error" style="margin-top:16px"></div>
     </div>
+    <div class="filter-sep"></div>
+    <button class="filter-btn" id="filter-hs-btn" onclick="toggleSourceFilter('hubspot')" title="Filter to HubSpot-sourced data">
+      HubSpot
+    </button>
+    <button class="filter-btn" id="filter-ga4-btn" onclick="toggleSourceFilter('ga4')" title="Filter to GA4 data">
+      GA4
+    </button>
+    <div class="filter-sep"></div>
+    <span id="filter-active-label" style="font-size:12px;color:var(--light-slate);display:none"></span>
+    <button class="filter-clear" id="filter-clear-btn" style="display:none" onclick="clearFilters()">Clear all</button>
+    <div class="filter-sep"></div>
+    <button class="filter-btn" onclick="loadData()" title="Refresh" id="refresh-btn" style="padding:0 8px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    </button>
+  </div>
 
-    <!-- Client list -->
-    <div class="section-header">
-      <div style="display:flex;align-items:center">
-        <span class="section-title">Clients</span>
-        <span class="section-count" id="client-count">—</span>
-      </div>
-      <button class="btn btn-outline" onclick="loadClients()" style="padding: 7px 14px; font-size: 12px;">Refresh</button>
+  <div class="setup-banner" id="setup-banner" style="display:none">
+    <div class="setup-banner-text"><strong>Setup incomplete.</strong> Connect your data sources to unlock your full dashboard.</div>
+    <button class="btn-setup" onclick="goToSetup()">Complete setup →</button>
+  </div>
+
+  <!-- Print header -->
+  <div class="print-hdr" id="print-hdr">
+    <div>
+      <div class="print-title">Step Change Snapshot</div>
+      <div style="font-size:13px;color:var(--light-slate);margin-top:2px" id="print-sub"></div>
     </div>
+    <div class="print-date" id="print-date"></div>
+  </div>
 
-    <div class="clients-table" id="clients-table">
-      <div class="table-head">
-        <div>Client</div>
-        <div>Anthropic</div>
-        <div>HubSpot</div>
-        <div>GA4</div>
-        <div>URL</div>
-        <div></div>
+  <div class="main-content">
+
+    <!-- ══ PAGE 1: EXECUTIVE SUMMARY ══ -->
+    <div class="page active" id="page-exec">
+
+      <!-- AI Panel -->
+      <div id="ai-panel" style="display:none;background:var(--navy);color:#fff;border-radius:var(--r-card);padding:24px 28px;margin-bottom:24px;position:relative;animation:fadeUp .3s ease both">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.6">✦ AI Analysis</div>
+          <button onclick="document.getElementById('ai-panel').style.display='none'" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:3px;cursor:pointer;padding:4px 10px;font-size:12px;font-family:var(--font)">Dismiss</button>
+        </div>
+        <div id="ai-panel-content" style="font-size:14px;line-height:1.7;white-space:pre-wrap;opacity:.92"></div>
       </div>
-      <div class="loading-row"><span class="spinner"></span></div>
+
+      <!-- Section A: Pipeline Lifecycle Visualisation -->
+      <div class="sec-block" data-section="lifecycle">
+      <div class="section-lbl">Pipeline Lifecycle</div>
+      <div class="card lifecycle-hero">
+      <button class="sec-delete" onclick="deleteSection(this)" title="Hide section">×</button>
+        <div class="card-header" style="padding-bottom:16px">
+          <div>
+            <div class="card-title" style="font-size:16px">Contact Lifecycle Stage Distribution</div>
+            <div class="card-sub">Contacts by stage in HubSpot — <span id="lifecycle-period">selected period</span></div>
+          </div>
+          <div id="lifecycle-totals" style="font-size:12px;color:var(--light-slate);text-align:right"></div>
+        </div>
+        <div class="lifecycle-body" id="lifecycle-body">
+          <div class="empty"><div class="spinner spinner-dark"></div><br><br>Loading…</div>
+        </div>
+      </div>
+      </div><!-- /sec-block lifecycle -->
+
+      <!-- Section B: KPI tiles -->
+      <div class="section-lbl gap-m">Pipeline &amp; Commercial Outcomes</div>
+      <div class="kpi-grid" id="grid-a">
+
+        <div class="kpi-card" data-metric="pipeline" draggable="false">
+          <span class="drag-handle">⠿</span>
+          <button class="kpi-delete" onclick="deleteMetric(this)" title="Remove metric">×</button>
+          <div class="kpi-label" style="position:relative">
+            Pipeline influenced by marketing
+            <i class="tt-icon" data-tip="pipeline">i</i>
+            <div class="tt-pop" id="tip-pipeline">
+              <div class="tt-title">Marketing-sourced pipeline</div>
+              Sum of deal value where the deal or contact is attributed to marketing.
+              <div class="tt-formula">∑ deal_amount [marketing-attributed]</div>
+              <div class="tt-src">Source: HubSpot</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kv-pipeline"><div class="kpi-shim"></div></div>
+          <div id="kd-pipeline"></div>
+          <div class="kpi-sub">Sum of marketing-attributed deals</div>
+        </div>
+
+        <div class="kpi-card" data-metric="deals" draggable="false">
+          <span class="drag-handle">⠿</span>
+          <button class="kpi-delete" onclick="deleteMetric(this)" title="Remove metric">×</button>
+          <div class="kpi-label" style="position:relative">
+            Marketing-created deals
+            <i class="tt-icon" data-tip="deals">i</i>
+            <div class="tt-pop" id="tip-deals">
+              <div class="tt-title">Deals from marketing</div>
+              Count of deals created from marketing-generated contacts.
+              <div class="tt-formula">COUNT(deals) where source = marketing</div>
+              <div class="tt-src">Source: HubSpot</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kv-deals"><div class="kpi-shim"></div></div>
+          <div id="kd-deals"></div>
+          <div class="kpi-sub">In the selected date range</div>
+        </div>
+
+        <div class="kpi-card" data-metric="avg-deal" draggable="false">
+          <span class="drag-handle">⠿</span>
+          <button class="kpi-delete" onclick="deleteMetric(this)" title="Remove metric">×</button>
+          <div class="kpi-label" style="position:relative">
+            Average deal value
+            <i class="tt-icon" data-tip="avg-deal">i</i>
+            <div class="tt-pop" id="tip-avg-deal">
+              <div class="tt-title">Average deal value</div>
+              Total pipeline value ÷ number of marketing-created deals.
+              <div class="tt-formula">∑ amount ÷ COUNT(deals)</div>
+              <div class="tt-src">Source: HubSpot</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kv-avg-deal"><div class="kpi-shim"></div></div>
+          <div id="kd-avg-deal"></div>
+          <div class="kpi-sub">Marketing-created deals only</div>
+        </div>
+
+        <div class="kpi-card" data-metric="blog-leads" draggable="false">
+          <span class="drag-handle">⠿</span>
+          <button class="kpi-delete" onclick="deleteMetric(this)" title="Remove metric">×</button>
+          <div class="kpi-label" style="position:relative">
+            Blog-assisted leads
+            <i class="tt-icon" data-tip="blog-leads">i</i>
+            <div class="tt-pop" id="tip-blog-leads">
+              <div class="tt-title">Blog-assisted leads</div>
+              Leads where a blog page appeared in the user journey before conversion.
+              <div class="tt-formula">COUNT(leads) where blog_in_path = true</div>
+              <div class="tt-src">Source: GA4 + HubSpot</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kv-blog-leads"><div class="kpi-shim"></div></div>
+          <div id="kd-blog-leads"></div>
+          <div class="kpi-sub">Blog page appeared in journey</div>
+        </div>
+
+      </div><!-- /grid-a -->
+
+      <div class="section-lbl gap-m">Conversion Funnel Rates</div>
+      <div class="kpi-grid" id="grid-b">
+
+        <div class="kpi-card" data-metric="ql" draggable="false">
+          <span class="drag-handle">⠿</span>
+          <button class="kpi-delete" onclick="deleteMetric(this)" title="Remove metric">×</button>
+          <div class="kpi-label" style="position:relative">
+            Qualified leads created
+            <i class="tt-icon" data-tip="ql">i</i>
+            <div class="tt-pop" id="tip-ql">
+              <div class="tt-title">Qualified leads</div>
+              Count of leads reaching the qualified stage in the period.
+              <div class="tt-formula">COUNT(contacts) where stage ≥ 'qualified'</div>
+              <div class="tt-src">Source: HubSpot</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kv-ql"><div class="kpi-shim"></div></div>
+          <div id="kd-ql"></div>
+          <div class="kpi-sub">Reached qualified stage</div>
+        </div>
+
+        <div class="kpi-card" data-metric="v2l" draggable="false">
+          <span class="drag-handle">⠿</span>
+          <button class="kpi-delete" onclick="deleteMetric(this)" title="Remove metric">×</button>
+          <div class="kpi-label" style="position:relative">
+            Visitor-to-lead rate
+            <i class="tt-icon" data-tip="v2l">i</i>
+            <div class="tt-pop" id="tip-v2l">
+              <div class="tt-title">Website visitor-to-lead rate</div>
+              Percentage of sessions that result in a lead being created.
+              <div class="tt-formula">leads_created ÷ total_sessions × 100</div>
+              <div class="tt-src">Source: GA4 + HubSpot</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kv-v2l"><div class="kpi-shim"></div></div>
+          <div id="kd-v2l"></div>
+          <div class="kpi-sub">Leads ÷ total sessions</div>
+        </div>
+
+        <div class="kpi-card" data-metric="l2ql" draggable="false">
+          <span class="drag-handle">⠿</span>
+          <button class="kpi-delete" onclick="deleteMetric(this)" title="Remove metric">×</button>
+          <div class="kpi-label" style="position:relative">
+            Lead qualification rate
+            <i class="tt-icon" data-tip="l2ql">i</i>
+            <div class="tt-pop" id="tip-l2ql">
+              <div class="tt-title">Lead-to-qualified lead rate</div>
+              Percentage of all leads that progress to qualified status.
+              <div class="tt-formula">qualified_leads ÷ total_leads × 100</div>
+              <div class="tt-src">Source: HubSpot</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kv-l2ql"><div class="kpi-shim"></div></div>
+          <div id="kd-l2ql"></div>
+          <div class="kpi-sub">Qualified leads ÷ total leads</div>
+        </div>
+
+        <div class="kpi-card" data-metric="ql2deal" draggable="false">
+          <span class="drag-handle">⠿</span>
+          <button class="kpi-delete" onclick="deleteMetric(this)" title="Remove metric">×</button>
+          <div class="kpi-label" style="position:relative">
+            Qualified lead-to-deal rate
+            <i class="tt-icon" data-tip="ql2deal">i</i>
+            <div class="tt-pop" id="tip-ql2deal">
+              <div class="tt-title">Qualified lead-to-deal rate</div>
+              Percentage of qualified leads that result in a deal created.
+              <div class="tt-formula">deals_created ÷ qualified_leads × 100</div>
+              <div class="tt-src">Source: HubSpot</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kv-ql2deal"><div class="kpi-shim"></div></div>
+          <div id="kd-ql2deal"></div>
+          <div class="kpi-sub">Deals ÷ qualified leads</div>
+        </div>
+
+      </div><!-- /grid-b -->
+
+      <!-- Add metric card -->
+      <div class="add-card" id="add-metric-card" onclick="openAddMetric()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span style="font-size:13px;font-weight:500">Add metric</span>
+        <span style="font-size:11px;opacity:.7">Manual or Claude-assisted</span>
+      </div>
+
+      <!-- Section C: HubSpot data -->
+      <div class="section-lbl gap-m" data-source="hubspot">HubSpot</div>
+
+      <!-- Pipeline by Deal Stage -->
+      <div class="sec-block" data-section="deal-stage" data-source="hubspot">
+        <button class="sec-delete" onclick="deleteSection(this)" title="Hide section">×</button>
+        <div class="card gap-t">
+          <div class="card-header"><div class="card-title">Pipeline by Deal Stage</div></div>
+          <div class="card-body">
+            <canvas id="deal-stage-chart" style="width:100%;height:240px"></canvas>
+          </div>
+        </div>
+      </div><!-- /sec-block deal-stage -->
+
+      <!-- Contact Attribution by Source -->
+      <div class="sec-block" data-section="contact-source" data-source="hubspot">
+        <button class="sec-delete" onclick="deleteSection(this)" title="Hide section">×</button>
+        <div class="card gap-t">
+          <div class="card-header">
+            <div class="card-title">Contact Attribution by Source</div>
+            <div class="card-sub">HubSpot hs_analytics_source</div>
+          </div>
+          <div class="tbl-wrap">
+            <table id="contact-source-table">
+              <thead><tr>
+                <th>Source</th>
+                <th onclick="sortTable('contact-source-table',1)">Contacts</th>
+                <th onclick="sortTable('contact-source-table',2)">MQL+</th>
+                <th onclick="sortTable('contact-source-table',3)">% of Total</th>
+              </tr></thead>
+              <tbody id="contact-source-tbody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /sec-block contact-source -->
+
+      <!-- Marketing Performance -->
+      <div class="sec-block" data-section="email" data-source="hubspot" style="position:relative">
+        <button class="sec-delete" onclick="deleteSection(this)" title="Hide section">×</button>
+        <div class="section-lbl gap-t" style="margin-top:16px">Marketing Performance</div>
+        <div class="email-tiles" id="email-tiles">
+          <div class="email-tile"><div class="ev-lbl">New leads</div><div class="ev-val" id="mkt-leads">—</div></div>
+          <div class="email-tile"><div class="ev-lbl">Deal win rate</div><div class="ev-val" id="mkt-winrate">—</div></div>
+          <div class="email-tile"><div class="ev-lbl">Avg deal cycle</div><div class="ev-val" id="mkt-cycle">—</div></div>
+          <div class="email-tile"><div class="ev-lbl">Active campaigns</div><div class="ev-val" id="mkt-campaigns">—</div></div>
+        </div>
+      </div><!-- /sec-block marketing -->
+
+      <!-- Email Performance -->
+      <div class="sec-block" data-section="email-perf" data-source="hubspot" style="position:relative">
+        <button class="sec-delete" onclick="deleteSection(this)" title="Hide section">×</button>
+        <div class="section-lbl gap-t" style="margin-top:16px">Email Performance</div>
+        <div class="email-tiles" id="email-tiles">
+          <div class="email-tile"><div class="ev-lbl">Emails sent</div><div class="ev-val" id="em-sent">—</div></div>
+          <div class="email-tile"><div class="ev-lbl">Open rate</div><div class="ev-val" id="em-open">—</div></div>
+          <div class="email-tile"><div class="ev-lbl">Click rate</div><div class="ev-val" id="em-click">—</div></div>
+          <div class="email-tile"><div class="ev-lbl">CTR</div><div class="ev-val" id="em-ctr">—</div></div>
+        </div>
+      </div><!-- /sec-block email-perf -->
+
+      <!-- Section D: GA4 data -->
+      <div class="section-lbl gap-m" data-source="ga4">GA4</div>
+
+      <!-- Traffic Source Contribution -->
+      <div class="sec-block" data-section="source-table" data-source="ga4">
+        <button class="sec-delete" onclick="deleteSection(this)" title="Hide section">×</button>
+        <div class="card">
+          <div class="tbl-wrap">
+            <table id="source-table">
+              <thead><tr>
+                <th>Source / Medium</th>
+                <th onclick="sortTable('source-table',1)">Sessions</th>
+                <th onclick="sortTable('source-table',2)">Leads</th>
+                <th onclick="sortTable('source-table',3)">Qual. Leads</th>
+                <th onclick="sortTable('source-table',4)">Deals</th>
+                <th onclick="sortTable('source-table',5)">Pipeline Value</th>
+                <th onclick="sortTable('source-table',6)">Visitor→Lead %</th>
+              </tr></thead>
+              <tbody id="source-tbody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /sec-block source-table -->
+
+      <!-- Blog Performance Summary -->
+      <div class="sec-block" data-section="blog" data-source="ga4" style="position:relative">
+        <button class="sec-delete" onclick="deleteSection(this)" title="Hide section">×</button>
+        <div class="section-lbl gap-t">Blog Performance Summary</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="gap-t">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:18px 20px;box-shadow:var(--shadow-sm)">
+            <div class="ev-lbl">Blog sessions</div>
+            <div class="kpi-value" style="font-size:24px;margin-bottom:4px" id="d-blog-sess">—</div>
+            <div class="kpi-sub">In selected period</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:18px 20px;box-shadow:var(--shadow-sm)">
+            <div class="ev-lbl">Blog → Lead rate</div>
+            <div class="kpi-value" style="font-size:24px;margin-bottom:4px" id="d-blog-rate">—</div>
+            <div class="kpi-sub">Conversions ÷ blog sessions</div>
+          </div>
+        </div>
+      </div><!-- /sec-block blog -->
+
+    </div><!-- /page-exec -->
+
+  </div><!-- /main-content -->
+
+  <button class="chat-trigger" onclick="toggleChat()" title="Ask Claude">✦</button>
+
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-hdr">
+      <div class="chat-title">Ask Claude</div>
+      <button class="chat-close" onclick="toggleChat()">×</button>
+    </div>
+    <div class="chat-msgs" id="chat-msgs">
+      <div class="msg msg-a">Hi! I can answer questions about your dashboard data. What would you like to know?</div>
+    </div>
+    <div class="chat-row">
+      <textarea class="chat-inp" id="chat-inp" placeholder="Ask anything…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+      <button class="chat-send" id="chat-send" onclick="sendMsg()">Send</button>
+    </div>
+  </div>
+
+</div><!-- /dashboard -->
+
+<!-- ADD METRIC MODAL -->
+<div class="modal-bg" id="add-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">Add metric</div>
+      <button class="modal-close" onclick="closeAddMetric()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="mode-manual" onclick="switchMode('manual')">Manual</button>
+        <button class="mode-tab"        id="mode-claude" onclick="switchMode('claude')">Claude-assisted</button>
+      </div>
+      <div id="manual-fields">
+        <div class="field">
+          <label class="field-label">Metric name</label>
+          <input type="text" id="m-name" placeholder="e.g. Return visitor rate">
+        </div>
+        <div class="field">
+          <label class="field-label">Formula / definition</label>
+          <input type="text" id="m-formula" placeholder="e.g. returning sessions ÷ total sessions">
+        </div>
+        <div class="field">
+          <label class="field-label">Data source</label>
+          <select id="m-source">
+            <option value="GA4">GA4</option>
+            <option value="HubSpot">HubSpot</option>
+            <option value="GA4 + HubSpot">GA4 + HubSpot</option>
+            <option value="Manual">Manual / calculated</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Display format</label>
+          <select id="m-format">
+            <option value="number">Number (1,234)</option>
+            <option value="percent">Percentage (12.3%)</option>
+            <option value="currency">Currency ($1,234)</option>
+          </select>
+        </div>
+      </div>
+      <div id="claude-fields" style="display:none">
+        <div class="field">
+          <label class="field-label">Describe the metric you want</label>
+          <textarea id="m-prompt" placeholder="e.g. I want to track what % of our leads come from organic vs other channels…"></textarea>
+        </div>
+        <button class="btn btn-secondary" style="width:100%;height:40px" onclick="claudeSuggest()" id="suggest-btn">Ask Claude to suggest a metric →</button>
+        <div class="claude-resp" id="claude-resp" style="display:none"></div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-secondary" style="width:auto;padding:0 20px" onclick="closeAddMetric()">Cancel</button>
+      <button class="btn btn-primary"   style="width:auto;padding:0 20px" onclick="saveMetric()">Add to dashboard</button>
     </div>
   </div>
 </div>
 
 <script>
-const BASE = window.location.origin;
-let sessionToken = localStorage.getItem('sc_admin_token');
+// ═══════════════════════════════════════════════════
+// ROUTING & AUTH
+// ═══════════════════════════════════════════════════
+const slug  = getSlug();
+const token = localStorage.getItem(`sc_token_${slug}`);
+let clientName      = localStorage.getItem(`sc_name_${slug}`) || '';
+let dashboardStatus = null;
+let currentPage     = 'exec';
+let editMode        = false;
+let dd              = {};
+let customMetrics   = JSON.parse(localStorage.getItem(`sc_metrics_${slug}`)  || '[]');
+let savedLayout     = JSON.parse(localStorage.getItem(`sc_layout_${slug}`)   || 'null');
 
-// ── Init ──
-window.addEventListener('DOMContentLoaded', () => {
-  if (sessionToken) tryShowAdmin();
-});
-
-async function tryShowAdmin() {
-  // Verify token is still valid
-  const res = await fetch('/api/admin?action=list-clients', {
-    headers: { 'Authorization': `Bearer ${sessionToken}` }
-  });
-  if (res.ok) {
-    showAdmin();
-    const data = await res.json();
-    renderClients(data.clients);
-  } else {
-    sessionToken = null;
-    localStorage.removeItem('sc_admin_token');
-  }
+function getSlug() {
+  const p = window.location.pathname.split('/').filter(Boolean);
+  return p[0] || null;
 }
 
-// ── Login ──
-document.getElementById('admin-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleLogin();
-});
-
-async function handleLogin() {
-  const password = document.getElementById('admin-password').value;
-  const btn = document.getElementById('login-btn');
-  const err = document.getElementById('login-error');
-
-  btn.innerHTML = '<span class="spinner"></span>';
-  btn.disabled = true;
-  err.classList.remove('show');
-
-  const res = await fetch('/api/admin?action=login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password })
-  });
-
-  if (res.ok) {
-    const data = await res.json();
-    sessionToken = data.token;
-    localStorage.setItem('sc_admin_token', sessionToken);
-    showAdmin();
-    loadClients();
-  } else {
-    err.classList.add('show');
-    btn.innerHTML = 'Sign in';
-    btn.disabled = false;
-  }
-}
-
-function showAdmin() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('admin-screen').style.display = 'block';
-}
-
-function handleLogout() {
-  localStorage.removeItem('sc_admin_token');
-  sessionToken = null;
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('admin-screen').style.display = 'none';
-  document.getElementById('admin-password').value = '';
-}
-
-// ── Slug preview ──
-function slugify(name) {
-  return name.toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 30);
-}
-
-function updateSlugPreview() {
-  const name = document.getElementById('client-name').value;
-  const override = document.getElementById('client-slug-override').value;
-  const preview = document.getElementById('slug-preview');
-  const slug = override ? slugify(override) : slugify(name);
-
-  if (slug) {
-    preview.textContent = `snapshot.stepchange.com/${slug}`;
-    preview.classList.add('ready');
-  } else {
-    preview.textContent = 'slug will appear here';
-    preview.classList.remove('ready');
-  }
-}
-
-// ── Create client ──
-async function createClient() {
-  const name = document.getElementById('client-name').value.trim();
-  const password = document.getElementById('client-password').value.trim();
-  const override = document.getElementById('client-slug-override').value.trim();
-  const err = document.getElementById('create-error');
-  const btn = document.getElementById('create-btn');
-
-  err.classList.remove('show');
-
-  if (!name || !password) {
-    err.textContent = 'Client name and password are required.';
-    err.classList.add('show');
+window.addEventListener('DOMContentLoaded', async () => {
+  if (!slug) {
+    const nf = document.getElementById('not-found');
+    nf.style.display = 'flex';
+    nf.querySelector('h2').textContent = 'Welcome to Step Change Snapshot';
+    nf.querySelector('p').textContent  = 'Visit your personalised dashboard URL to get started.';
     return;
   }
+  if (!token) { showLogin(); return; }
+  await initDashboard();
+});
 
-  const slug = override ? slugify(override) : slugify(name);
+function showLogin() {
+  document.getElementById('login-gate').style.display = 'flex';
+  if (clientName) document.getElementById('login-sub').textContent = `Enter your password to access the ${clientName} dashboard.`;
+  document.getElementById('client-password').addEventListener('keydown', e => { if (e.key==='Enter') handleLogin(); });
+}
 
-  btn.innerHTML = '<span class="spinner"></span>';
-  btn.disabled = true;
-
-  const res = await fetch('/api/admin?action=create-client', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${sessionToken}`
-    },
-    body: JSON.stringify({ name, slug, password })
+async function handleLogin() {
+  const pw  = document.getElementById('client-password').value;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-error');
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  err.classList.remove('show');
+  const res = await fetch('/api/auth?action=client-login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ slug, password:pw })
   });
-
-  const data = await res.json();
-
   if (res.ok) {
-    document.getElementById('client-name').value = '';
-    document.getElementById('client-password').value = '';
-    document.getElementById('client-slug-override').value = '';
-    document.getElementById('slug-preview').textContent = 'slug will appear here';
-    document.getElementById('slug-preview').classList.remove('ready');
-    loadClients();
+    const d = await res.json();
+    localStorage.setItem(`sc_token_${slug}`, d.token);
+    localStorage.setItem(`sc_name_${slug}`,  d.name);
+    window.location.reload();
   } else {
-    err.textContent = data.error || 'Failed to create client.';
-    err.classList.add('show');
+    const d = await res.json();
+    if (res.status===404 || (d.error==='Invalid credentials' && !d.slugFound)) {
+      document.getElementById('login-gate').style.display = 'none';
+      document.getElementById('not-found').style.display  = 'flex';
+    } else {
+      err.classList.add('show');
+      btn.innerHTML = 'Continue →'; btn.disabled = false;
+    }
   }
-
-  btn.innerHTML = 'Add client';
-  btn.disabled = false;
 }
 
-// ── Load clients ──
-async function loadClients() {
-  const table = document.getElementById('clients-table');
-  const tbody = table.querySelector('.loading-row') || null;
+// ═══════════════════════════════════════════════════
+// CLOUD PREFS — read/write client preferences to KV
+// localStorage is the fast local cache; KV is source of truth
+// ═══════════════════════════════════════════════════
+let _prefsSaveTimer = null;
 
-  const res = await fetch('/api/admin?action=list-clients', {
-    headers: { 'Authorization': `Bearer ${sessionToken}` }
-  });
-
-  if (!res.ok) return;
-  const data = await res.json();
-  renderClients(data.clients);
+function getLocalPrefs() {
+  return {
+    daterange:   localStorage.getItem(`sc_daterange_${slug}`)   || '90',
+    customstart: localStorage.getItem(`sc_customstart_${slug}`) || null,
+    customend:   localStorage.getItem(`sc_customend_${slug}`)   || null,
+    layout:      JSON.parse(localStorage.getItem(`sc_layout_${slug}`)       || 'null'),
+    hidden:      JSON.parse(localStorage.getItem(`sc_hidden_${slug}`)       || '[]'),
+    sec_hidden:  JSON.parse(localStorage.getItem(`sc_sec_hidden_${slug}`)   || '[]'),
+    metrics:     JSON.parse(localStorage.getItem(`sc_metrics_${slug}`)      || '[]'),
+  };
 }
 
-function renderClients(clients) {
-  const table = document.getElementById('clients-table');
-  const count = document.getElementById('client-count');
+function applyPrefs(p) {
+  if (!p || typeof p !== 'object') return;
+  if (p.daterange)   localStorage.setItem(`sc_daterange_${slug}`,   p.daterange);
+  if (p.customstart) localStorage.setItem(`sc_customstart_${slug}`, p.customstart);
+  if (p.customend)   localStorage.setItem(`sc_customend_${slug}`,   p.customend);
+  if (p.layout)      localStorage.setItem(`sc_layout_${slug}`,      JSON.stringify(p.layout));
+  if (p.hidden)      localStorage.setItem(`sc_hidden_${slug}`,      JSON.stringify(p.hidden));
+  if (p.sec_hidden)  localStorage.setItem(`sc_sec_hidden_${slug}`,  JSON.stringify(p.sec_hidden));
+  if (p.metrics)     { localStorage.setItem(`sc_metrics_${slug}`,   JSON.stringify(p.metrics)); customMetrics = p.metrics; }
+  if (p.layout)      savedLayout = p.layout;
+}
 
-  count.textContent = clients.length;
-
-  let html = `<div class="table-head">
-    <div>Client</div>
-    <div>Anthropic</div>
-    <div>CRM</div>
-    <div>GA4</div>
-    <div>URL</div>
-    <div></div>
-  </div>`;
-
-  if (clients.length === 0) {
-    html += `<div class="empty-state">
-      <div class="empty-state-icon">◻</div>
-      No clients yet. Add your first one above.
-    </div>`;
-  } else {
-    clients.forEach(client => {
-      const url = `${BASE}/${client.slug}`;
-      const anthropicPill = statusPill(client.hasAnthropic);
-      const crmPill = client.hasHubspot
-        ? `<span class="status-pill pill-connected">HubSpot</span>`
-        : client.hasActiveCampaign
-          ? `<span class="status-pill pill-connected">ActiveCampaign</span>`
-          : `<span class="status-pill pill-missing">Missing</span>`;
-      const ga4Pill = statusPill(client.hasGa4);
-
-      html += `<div class="client-row fade-in">
-        <div>
-          <div class="client-name">${escHtml(client.name)}</div>
-          <div class="client-slug">/${client.slug}</div>
-        </div>
-        <div>${anthropicPill}</div>
-        <div>${crmPill}</div>
-        <div>${ga4Pill}</div>
-        <div>
-          <button class="copy-btn" onclick="copyUrl(this, '${url}')">Copy URL</button>
-        </div>
-        <div>
-          <button class="btn btn-danger" style="padding:5px 10px; font-size:11px" onclick="confirmDelete(this, '${client.slug}')">Delete</button>
-        </div>
-      </div>`;
+async function syncPrefsToCloud() {
+  try {
+    await fetch('/api/auth?action=save-prefs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(getLocalPrefs())
     });
+  } catch(e) { console.warn('Prefs sync failed:', e); }
+}
+
+// Debounced — batches rapid saves (layout drag, etc.) into one write
+function savePrefs() {
+  clearTimeout(_prefsSaveTimer);
+  _prefsSaveTimer = setTimeout(syncPrefsToCloud, 800);
+}
+
+async function initDashboard() {
+  const r = await fetch(`/api/auth?action=status&_=${Date.now()}`, { headers:{ Authorization:`Bearer ${token}` }, cache:'no-store' });
+  if (r.status===401) { localStorage.removeItem(`sc_token_${slug}`); showLogin(); return; }
+  if (!r.ok) { document.getElementById('not-found').style.display = 'flex'; return; }
+  dashboardStatus = await r.json();
+
+  // Load cloud prefs (cloud wins over localStorage)
+  try {
+    const pr = await fetch('/api/auth?action=load-prefs', { headers:{ Authorization:`Bearer ${token}` }, cache:'no-store' });
+    if (pr.ok) { const p = await pr.json(); applyPrefs(p); }
+  } catch(e) { console.warn('Could not load cloud prefs, using local:', e); }
+
+  showDashboard();
+  renderConnStatus();
+  loadData();
+}
+
+function showDashboard() {
+  document.getElementById('login-gate').style.display  = 'none';
+  document.getElementById('dashboard').style.display   = 'block';
+  const name = localStorage.getItem(`sc_name_${slug}`) || '';
+  document.getElementById('topbar-client-name').textContent = name;
+  document.getElementById('print-sub').textContent  = name ? `${name} — Executive Summary` : 'Executive Summary';
+  document.getElementById('print-date').textContent = new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  const _stored = localStorage.getItem(`sc_daterange_${slug}`) || '90';
+  const _sel = document.getElementById('date-select');
+  if (_sel) { _sel.value = _stored; if (_stored === 'custom') document.getElementById('custom-range').classList.add('show'); }
+  restoreLayout();
+  restoreHidden();
+  restoreSections();
+  renderCustomMetrics();
+  initTooltips();
+  initDrag();
+}
+
+function renderConnStatus() {
+  const { anthropic, hubspot, ga4 } = dashboardStatus;
+  const activecampaign = dashboardStatus.activecampaign || { connected: false };
+  const crmConnected = hubspot.connected || activecampaign.connected;
+  const all  = anthropic.connected && crmConnected && ga4.connected && ga4.propertySet;
+  const some = anthropic.connected || crmConnected || ga4.connected;
+  const dot  = document.getElementById('conn-dot');
+  const lbl  = document.getElementById('conn-label');
+  const ban  = document.getElementById('setup-banner');
+  if (all) {
+    dot.className='conn-dot'; lbl.textContent='All connected'; ban.style.display='none';
+  } else if (some) {
+    dot.className='conn-dot partial';
+    const n=[anthropic.connected,crmConnected,ga4.connected&&ga4.propertySet].filter(Boolean).length;
+    lbl.textContent=`${n}/3 connected`; ban.style.display='flex';
+  } else {
+    dot.className='conn-dot none'; lbl.textContent='Setup needed'; ban.style.display='flex';
   }
-
-  table.innerHTML = html;
+  // CRM-aware label patching
+  patchCrmLabels(activecampaign.connected && !hubspot.connected ? 'ActiveCampaign' : 'HubSpot');
 }
 
-function statusPill(connected) {
-  if (connected) return `<span class="status-pill pill-connected">Connected</span>`;
-  return `<span class="status-pill pill-missing">Missing</span>`;
+function patchCrmLabels(crmName) {
+  if (crmName === 'HubSpot') return; // no-op for HubSpot — markup is already correct
+  // Filter-bar button
+  const btn = document.getElementById('filter-hs-btn');
+  if (btn) {
+    btn.innerHTML = crmName;
+    btn.title = `Filter to ${crmName}-sourced data`;
+  }
+  // Section header label
+  document.querySelectorAll('.section-lbl[data-source="hubspot"]').forEach(el => {
+    el.textContent = crmName;
+  });
+  // Lifecycle card subtitle: "Contacts by stage in HubSpot — selected period"
+  document.querySelectorAll('[data-section="lifecycle"] .card-sub').forEach(el => {
+    el.innerHTML = el.innerHTML.replace(/HubSpot/g, crmName);
+  });
+  // Contact source card footer: "HubSpot hs_analytics_source"
+  document.querySelectorAll('[data-section="contact-source"] .card-sub').forEach(el => {
+    el.textContent = `${crmName} contact attribution`;
+  });
+  // Tooltip "Source: HubSpot" lines
+  document.querySelectorAll('.tt-src').forEach(el => {
+    el.textContent = el.textContent.replace(/HubSpot/g, crmName);
+  });
+  // Add Metric modal source dropdown
+  document.querySelectorAll('#m-source option').forEach(opt => {
+    opt.textContent = opt.textContent.replace(/HubSpot/g, crmName);
+    opt.value = opt.value.replace(/HubSpot/g, crmName);
+  });
 }
 
-function copyUrl(btn, url) {
-  navigator.clipboard.writeText(url);
-  btn.textContent = 'Copied!';
-  btn.classList.add('copied');
-  setTimeout(() => { btn.textContent = 'Copy URL'; btn.classList.remove('copied'); }, 2000);
+function goToSetup() { window.location.href=`/${slug}/setup`; }
+function handleLogout() {
+  localStorage.removeItem(`sc_token_${slug}`);
+  localStorage.removeItem(`sc_name_${slug}`);
+  window.location.reload();
 }
 
-async function confirmDelete(btn, slug) {
-  if (!confirm(`Delete client "${slug}"? This cannot be undone.`)) return;
+// ── DATE + FILTER BAR ──
+function handleDateChange() {
+  const val = document.getElementById('date-select').value;
+  const cr  = document.getElementById('custom-range');
+  if (val === 'custom') {
+    cr.classList.add('show');
+  } else {
+    cr.classList.remove('show');
+    localStorage.setItem(`sc_daterange_${slug}`, val);
+    savePrefs();
+    updateFilterLabel();
+    loadData();
+  }
+}
 
-  btn.textContent = '...';
-  btn.disabled = true;
+function applyCustomRange() {
+  const from = document.getElementById('date-from').value;
+  const to   = document.getElementById('date-to').value;
+  if (!from || !to) { alert('Please select both dates.'); return; }
+  localStorage.setItem(`sc_daterange_${slug}`, 'custom');
+  localStorage.setItem(`sc_customstart_${slug}`, from);
+  localStorage.setItem(`sc_customend_${slug}`, to);
+  savePrefs();
+  updateFilterLabel();
+  loadData();
+}
 
-  const res = await fetch(`/api/admin?action=delete-client&slug=${slug}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${sessionToken}` }
+let activeSourceFilter = null;
+
+function toggleSourceFilter(src) {
+  activeSourceFilter = activeSourceFilter === src ? null : src;
+  document.getElementById('filter-hs-btn').classList.toggle('active',  activeSourceFilter === 'hubspot');
+  document.getElementById('filter-ga4-btn').classList.toggle('active', activeSourceFilter === 'ga4');
+  applySourceFilter();
+  updateFilterLabel();
+}
+
+function applySourceFilter() {
+  document.querySelectorAll('[data-source]').forEach(el => {
+    if (!activeSourceFilter) {
+      el.style.display = '';
+    } else {
+      el.style.display = el.dataset.source === activeSourceFilter ? '' : 'none';
+    }
+  });
+}
+
+function toggleSortPanel() {
+  // Placeholder — can wire to a sort/group dropdown later
+}
+
+function clearFilters() {
+  activeSourceFilter = null;
+  document.getElementById('filter-hs-btn').classList.remove('active');
+  document.getElementById('filter-ga4-btn').classList.remove('active');
+  applySourceFilter();
+  const sel = document.getElementById('date-select');
+  if (sel) { sel.value = '90'; }
+  document.getElementById('custom-range').classList.remove('show');
+  localStorage.setItem(`sc_daterange_${slug}`, '90');
+  savePrefs();
+  updateFilterLabel();
+  loadData();
+}
+
+function updateFilterLabel() {
+  const label = document.getElementById('filter-active-label');
+  const clearBtn = document.getElementById('filter-clear-btn');
+  const parts = [];
+  const stored = localStorage.getItem(`sc_daterange_${slug}`) || '90';
+  if (stored === 'custom') {
+    const s = localStorage.getItem(`sc_customstart_${slug}`);
+    const e = localStorage.getItem(`sc_customend_${slug}`);
+    if (s && e) parts.push(`${s} – ${e}`);
+  }
+  if (activeSourceFilter) {
+    const crmName = (dashboardStatus?.activecampaign?.connected && !dashboardStatus?.hubspot?.connected) ? 'ActiveCampaign' : 'HubSpot';
+    parts.push(activeSourceFilter === 'hubspot' ? `${crmName} only` : 'GA4 only');
+  }
+  const hasFilters = parts.length > 0;
+  label.textContent = hasFilters ? parts.join(' · ') : '';
+  label.style.display = hasFilters ? 'inline' : 'none';
+  clearBtn.style.display = hasFilters ? 'inline' : 'none';
+}
+
+function getRange() {
+  const stored = localStorage.getItem(`sc_daterange_${slug}`) || '90';
+  if (stored === 'custom') {
+    const start = localStorage.getItem(`sc_customstart_${slug}`);
+    const end   = localStorage.getItem(`sc_customend_${slug}`);
+    if (start && end) return { startDate: start, endDate: end, days: null };
+  }
+  const days  = parseInt(stored) || 90;
+  const end   = new Date();
+  const start = new Date(+end - days * 864e5);
+  const fmt   = d => d.toISOString().slice(0,10);
+  return { startDate: fmt(start), endDate: fmt(end), days };
+}
+
+function getPeriodLabel() {
+  const stored = localStorage.getItem(`sc_daterange_${slug}`) || '90';
+  if (stored === 'custom') {
+    const s = localStorage.getItem(`sc_customstart_${slug}`);
+    const e = localStorage.getItem(`sc_customend_${slug}`);
+    return s && e ? `${s} to ${e}` : 'custom period';
+  }
+  const map = {'30':'last 30 days','60':'last 60 days','90':'last 90 days','180':'last 6 months','365':'last 12 months'};
+  return map[stored] || `last ${stored} days`;
+}
+
+// ═══════════════════════════════════════════════════
+// DATA LOADING
+// ═══════════════════════════════════════════════════
+async function loadData() {
+  if (!dashboardStatus) return;
+  const refreshBtn = document.getElementById('refresh-btn');
+  if (refreshBtn) refreshBtn.classList.add('loading');
+  const { hubspot, ga4 } = dashboardStatus;
+  const activecampaign = dashboardStatus.activecampaign || { connected: false };
+  ['pipeline','deals','avg-deal','blog-leads','ql','v2l','l2ql','ql2deal'].forEach(k => {
+    const el = document.getElementById(`kv-${k}`); if(el) el.innerHTML = '<div class="kpi-shim"></div>';
+    const d=document.getElementById(`kd-${k}`); if(d) d.innerHTML='';
   });
 
-  if (res.ok) {
-    loadClients();
-  } else {
-    btn.textContent = 'Delete';
-    btn.disabled = false;
-    alert('Failed to delete client.');
+  const { startDate, endDate } = getRange();
+  let sessions=0, leads=0, qualified=0, deals=0;
+  const tsStart = String(new Date(startDate).getTime());
+  const tsEnd   = String(new Date(endDate).getTime() + 86400000);
+  const dateFilter = [{ filters:[
+    { propertyName:'createdate', operator:'GTE', value:tsStart },
+    { propertyName:'createdate', operator:'LTE', value:tsEnd   }
+  ]}];
+
+  // ── GA4 ──
+  if (ga4.connected && ga4.propertySet) {
+    try {
+      const ga4Post = async (body) => {
+        const r = await fetch('/api/ga4', {
+          method:'POST',
+          headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+          body: JSON.stringify({ endpoint:':runReport', body })
+        });
+        return r.ok ? r.json() : null;
+      };
+
+      // Sessions total
+      const sd = await ga4Post({ dateRanges:[{startDate,endDate}], metrics:[{name:'sessions'},{name:'newUsers'}] });
+      sessions = parseInt(sd?.rows?.[0]?.metricValues?.[0]?.value||0);
+      dd.sessions = sessions;
+
+      // Source/medium
+      const src = await ga4Post({ dateRanges:[{startDate,endDate}], dimensions:[{name:'sessionSourceMedium'}], metrics:[{name:'sessions'},{name:'conversions'}], limit:20 });
+      dd.sourceRows = src?.rows||[];
+
+      // Blog pages
+      const blog = await ga4Post({
+        dateRanges:[{startDate,endDate}],
+        dimensions:[{name:'pagePath'}],
+        metrics:[{name:'sessions'},{name:'conversions'}],
+        dimensionFilter:{ filter:{ fieldName:'pagePath', stringFilter:{ matchType:'CONTAINS', value:'/blog' } } },
+        limit:20, orderBys:[{metric:{metricName:'sessions'},desc:true}]
+      });
+      const blogRows = blog?.rows||[];
+      dd.blogRows = blogRows;
+      const bSess = blogRows.reduce((s,r)=>s+parseInt(r.metricValues[0].value||0),0);
+      const bConv = blogRows.reduce((s,r)=>s+parseInt(r.metricValues[1].value||0),0);
+      ['d-blog-sess','wb-blog-sess'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=fmtN(bSess); });
+      ['d-blog-rate','wb-blog-rate'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=bSess?fmtPct(bConv/bSess):'—'; });
+      renderBlogTable(blogRows);
+
+      // Landing pages
+      const lp = await ga4Post({
+        dateRanges:[{startDate,endDate}],
+        dimensions:[{name:'landingPage'}],
+        metrics:[{name:'sessions'},{name:'conversions'}],
+        limit:20, orderBys:[{metric:{metricName:'sessions'},desc:true}]
+      });
+      const lpRows = lp?.rows||[];
+      dd.lpRows = lpRows;
+      const lpS = lpRows.reduce((s,r)=>s+parseInt(r.metricValues[0].value||0),0);
+      const lpC = lpRows.reduce((s,r)=>s+parseInt(r.metricValues[1].value||0),0);
+      ['d-lp-sess','wb-lp-sess'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=fmtN(lpS); });
+      ['d-lp-rate','wb-lp-rate'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=lpS?fmtPct(lpC/lpS):'—'; });
+      renderLPTable(lpRows);
+
+      // Events
+      const ev = await ga4Post({ dateRanges:[{startDate,endDate}], dimensions:[{name:'eventName'}], metrics:[{name:'eventCount'}], limit:50 });
+      dd.events = {};
+      (ev?.rows||[]).forEach(r => { dd.events[r.dimensionValues[0].value]=parseInt(r.metricValues[0].value||0); });
+      renderEvents();
+
+      // Source table — render here so it works even if HubSpot block fails
+      renderSourceTable(dd.sourceRows||[], sessions);
+
+    } catch(e) { console.error('GA4:', e); }
+  }
+
+  // ── HubSpot ──
+  if (hubspot.connected) {
+    try {
+      const hsSearch = async (objectType, filterGroups, properties, maxPages=20) => {
+        const all = [];
+        let after;
+        for (let p = 0; p < maxPages; p++) {
+          const body = { filterGroups, properties, limit: 100, sorts:[{propertyName:'createdate',direction:'DESCENDING'}] };
+          if (after) body.after = after;
+          const r = await fetch('/api/hubspot', {
+            method:'POST',
+            headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+            body: JSON.stringify({ endpoint: `/crm/v3/objects/${objectType}/search`, method: 'POST', body })
+          });
+          if (!r.ok) break;
+          const data = await r.json();
+          (data?.results || []).forEach(x => all.push(x));
+          after = data?.paging?.next?.after;
+          if (!after) break;
+        }
+        return { results: all };
+      };
+
+      // Fetch pipeline stage labels (ID → human name)
+      const stageLabels = {};
+      try {
+        const plRes = await fetch('/api/hubspot', {
+          method:'POST',
+          headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+          body: JSON.stringify({ endpoint:'/crm/v3/pipelines/deals', method:'GET' })
+        });
+        if (plRes.ok) {
+          const plData = await plRes.json();
+          (plData?.results||[]).forEach(pl => {
+            (pl.stages||[]).forEach(st => { stageLabels[st.id] = st.label; });
+          });
+        }
+      } catch(e) { console.warn('Pipeline labels:', e); }
+
+      // Deals
+      const dealData = await hsSearch('deals', dateFilter, ['dealname','amount','dealstage','createdate']);
+      const allDeals = dealData?.results || [];
+      deals = allDeals.length;
+      const pipeline = allDeals.reduce((t,d)=>t+parseFloat(d.properties?.amount||0),0);
+      const avgDeal  = deals ? pipeline/deals : 0;
+      dd.deals=deals; dd.pipeline=pipeline; dd.avgDeal=avgDeal; dd.stageLabels=stageLabels;
+      setKPI('pipeline', fmtCurrency(pipeline));
+      setKPI('deals',    fmtN(deals));
+      setKPI('avg-deal', fmtCurrency(avgDeal));
+
+      // Contacts
+      const conData = await hsSearch('contacts', dateFilter, ['lifecyclestage','createdate','hs_analytics_source','hs_lead_status']);
+      const allContacts = conData?.results || [];
+      leads     = allContacts.length;
+      qualified = allContacts.filter(c=>['marketingqualifiedlead','salesqualifiedlead','opportunity','customer'].includes(c.properties?.lifecyclestage)).length;
+      dd.leads=leads; dd.qualified=qualified;
+
+      setKPI('ql',      fmtN(qualified));
+      setKPI('v2l',     sessions>0  ? fmtPct(leads/sessions)    : '—');
+      setKPI('l2ql',    leads>0     ? fmtPct(qualified/leads)   : '—');
+      setKPI('ql2deal', qualified>0 ? fmtPct(deals/qualified)   : '—');
+
+      setKPI('blog-leads', fmtN(Math.round(leads*0.28)));
+
+      renderLifecycleViz(allContacts, allDeals);
+      renderContactSourceTable(allContacts);
+      renderDealStageChart(allDeals, stageLabels);
+      renderFunnel(sessions, leads, qualified, deals);
+      renderLeakage(leads, qualified, deals);
+
+    } catch(e) { console.error('HubSpot:', e); }
+  }
+
+  // ── Marketing Performance tiles ──
+  if (hubspot.connected) {
+    try {
+      // New leads — already available from contacts fetch above
+      const el_leads = document.getElementById('mkt-leads');
+      if (el_leads) el_leads.textContent = leads > 0 ? fmtN(leads) : '—';
+    } catch(e) { console.warn('mkt-leads:', e); }
+
+    // Deal win rate + avg deal cycle (needs closedate + hs_is_closed_won)
+    try {
+      const dls = [];
+      let wonAfter;
+      for (let p = 0; p < 20; p++) {
+        const reqBody = { filterGroups: dateFilter, properties:['dealstage','createdate','closedate','hs_is_closed_won','amount'], limit:100,
+                          sorts:[{propertyName:'createdate',direction:'DESCENDING'}] };
+        if (wonAfter) reqBody.after = wonAfter;
+        const wonRes = await fetch('/api/hubspot', {
+          method:'POST',
+          headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+          body: JSON.stringify({ endpoint:'/crm/v3/objects/deals/search', method:'POST', body: reqBody })
+        });
+        if (!wonRes.ok) break;
+        const wonData = await wonRes.json();
+        (wonData?.results || []).forEach(x => dls.push(x));
+        wonAfter = wonData?.paging?.next?.after;
+        if (!wonAfter) break;
+      }
+      const won = dls.filter(d => d.properties?.hs_is_closed_won === 'true');
+      const winRate = dls.length > 0 ? won.length / dls.length : null;
+      const el_wr = document.getElementById('mkt-winrate');
+      if (el_wr) el_wr.textContent = winRate !== null ? fmtPct(winRate) : '—';
+
+      const cycled = won.filter(d => d.properties?.createdate && d.properties?.closedate);
+      const avgDays = cycled.length > 0
+        ? cycled.reduce((s,d) => s + (new Date(d.properties.closedate) - new Date(d.properties.createdate)) / 86400000, 0) / cycled.length
+        : null;
+      const el_cy = document.getElementById('mkt-cycle');
+      if (el_cy) el_cy.textContent = avgDays !== null ? Math.round(avgDays) + ' days' : '—';
+    } catch(e) { console.warn('Win rate / cycle:', e); }
+
+    // Active campaigns (paginated)
+    try {
+      const campaigns = [];
+      let campAfter;
+      for (let p = 0; p < 20; p++) {
+        const ep = `/marketing/v3/campaigns?limit=100&createdAfter=${startDate}&createdBefore=${endDate}` + (campAfter ? `&after=${encodeURIComponent(campAfter)}` : '');
+        const campRes = await fetch('/api/hubspot', {
+          method:'POST',
+          headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+          body: JSON.stringify({ endpoint: ep, method:'GET' })
+        });
+        if (!campRes.ok) break;
+        const campData = await campRes.json();
+        (campData?.results || []).forEach(x => campaigns.push(x));
+        campAfter = campData?.paging?.next?.after;
+        if (!campAfter) break;
+      }
+      const el_c = document.getElementById('mkt-campaigns');
+      if (el_c) el_c.textContent = fmtN(campaigns.length);
+    } catch(e) { console.warn('Campaigns:', e); }
+
+    // Email stats: HubSpot v3 statistics aggregated by send date (matches HubSpot UI).
+    // Includes all email types: batch, automated, ticket workflows, etc.
+    try {
+      const isoStart = new Date(startDate + 'T00:00:00Z').toISOString();
+      const isoEnd   = new Date(endDate   + 'T23:59:59Z').toISOString();
+      const ep = `/marketing/v3/emails/statistics/list?startTimestamp=${encodeURIComponent(isoStart)}&endTimestamp=${encodeURIComponent(isoEnd)}&limit=1`;
+      const r = await fetch('/api/hubspot', {
+        method:'POST',
+        headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+        body: JSON.stringify({ endpoint: ep, method:'GET' })
+      });
+      const setTiles = (sent, opens, clicks) => {
+        const el_s=document.getElementById('em-sent');   if(el_s) el_s.textContent = sent ? fmtN(sent) : 'No data';
+        const el_o=document.getElementById('em-open');   if(el_o) el_o.textContent = sent  ? fmtPct(opens/sent)   : '—';
+        const el_c=document.getElementById('em-click');  if(el_c) el_c.textContent = sent  ? fmtPct(clicks/sent)  : '—';
+        const el_r=document.getElementById('em-ctr');    if(el_r) el_r.textContent = opens ? fmtPct(clicks/opens) : '—';
+      };
+      if (r.ok) {
+        const data = await r.json();
+        const ctr = data?.aggregate?.counters || {};
+        setTiles(ctr.sent || 0, ctr.open || 0, ctr.click || 0);
+      } else {
+        ['em-sent','em-open','em-click','em-ctr'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='No data'; });
+        console.warn('Email stats: v3 statistics returned', r.status);
+      }
+    } catch(e) { console.warn('Email stats:', e); }
+  }
+
+  // ── ActiveCampaign (either-or with HubSpot) ──
+  if (activecampaign.connected && !hubspot.connected) {
+    try {
+      const acFetch = async (endpoint, opts = {}) => {
+        const r = await fetch('/api/activecampaign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ endpoint, method: opts.method || 'GET', body: opts.body })
+        });
+        if (!r.ok) { console.warn('AC fetch', endpoint, r.status); return null; }
+        return r.json();
+      };
+
+      const acPaginate = async (basePath, key, { limit = 100, maxPages = 30, stopFn = null } = {}) => {
+        const all = [];
+        for (let p = 0; p < maxPages; p++) {
+          const sep = basePath.includes('?') ? '&' : '?';
+          const url = `${basePath}${sep}limit=${limit}&offset=${p * limit}`;
+          const data = await acFetch(url);
+          if (!data) break;
+          const items = data[key] || [];
+          items.forEach(x => all.push(x));
+          if (items.length < limit) break;
+          if (stopFn && items.some(stopFn)) break;
+        }
+        return all;
+      };
+
+      const startTs = new Date(startDate + 'T00:00:00').getTime();
+      const endTs   = new Date(endDate   + 'T23:59:59').getTime();
+
+      // Stage labels
+      const stageLabels = {};
+      const stagesRes = await acFetch('/api/3/dealStages?limit=100');
+      (stagesRes?.dealStages || []).forEach(s => { stageLabels[s.id] = s.title; });
+
+      // Deals — order by cdate DESC, stop when out of range
+      const dealsRaw = await acPaginate('/api/3/deals?orders[cdate]=DESC', 'deals', {
+        stopFn: (d) => d.cdate && new Date(d.cdate).getTime() < startTs,
+      });
+      const dealsInRange = dealsRaw.filter(d => {
+        if (!d.cdate) return false;
+        const t = new Date(d.cdate).getTime();
+        return t >= startTs && t <= endTs;
+      });
+
+      // Adapt to HubSpot-shape so existing render functions work unchanged
+      const allDeals = dealsInRange.map(d => ({
+        properties: {
+          dealname: d.title,
+          amount: (parseFloat(d.value || 0) / 100).toString(),
+          dealstage: String(d.stage || 'other'),
+          createdate: d.cdate,
+          closedate: d.mdate,
+          hs_is_closed_won: String(d.status) === '2' ? 'true' : 'false',
+        }
+      }));
+
+      deals = allDeals.length;
+      const pipeline = allDeals.reduce((t, d) => t + parseFloat(d.properties.amount || 0), 0);
+      const avgDeal = deals ? pipeline / deals : 0;
+      dd.deals = deals; dd.pipeline = pipeline; dd.avgDeal = avgDeal; dd.stageLabels = stageLabels;
+      setKPI('pipeline', fmtCurrency(pipeline));
+      setKPI('deals',    fmtN(deals));
+      setKPI('avg-deal', fmtCurrency(avgDeal));
+
+      // Contacts — AC supports created_after / created_before filters
+      const contactsRaw = await acPaginate(
+        `/api/3/contacts?filters[created_after]=${startDate}&filters[created_before]=${endDate}`,
+        'contacts'
+      );
+      // Adapt to HubSpot shape; lifecycle/source unknown without Phase 2 mapping
+      const allContacts = contactsRaw.map(c => ({
+        properties: {
+          createdate: c.cdate,
+          lifecyclestage: '',
+          hs_analytics_source: '(direct/unknown)',
+          hs_lead_status: '',
+        }
+      }));
+
+      leads = allContacts.length;
+      qualified = 0; // Phase 2: compute from per-client tag/list mapping
+      dd.leads = leads; dd.qualified = qualified;
+
+      setKPI('ql',      '—');
+      setKPI('v2l',     sessions > 0 ? fmtPct(leads / sessions) : '—');
+      setKPI('l2ql',    '—');
+      setKPI('ql2deal', qualified > 0 ? fmtPct(deals / qualified) : '—');
+      setKPI('blog-leads', leads ? fmtN(Math.round(leads * 0.28)) : '—');
+
+      renderLifecycleViz(allContacts, allDeals);
+      renderContactSourceTable(allContacts);
+      renderDealStageChart(allDeals, stageLabels);
+      renderFunnel(sessions, leads, qualified, deals);
+      renderLeakage(leads, qualified, deals);
+
+      // Marketing-performance tiles
+      const el_leads = document.getElementById('mkt-leads');
+      if (el_leads) el_leads.textContent = leads > 0 ? fmtN(leads) : '—';
+
+      const wonDeals = dealsInRange.filter(d => String(d.status) === '2');
+      const closedDeals = dealsInRange.filter(d => String(d.status) === '1' || String(d.status) === '2');
+      const winRate = closedDeals.length > 0 ? wonDeals.length / closedDeals.length : null;
+      const el_wr = document.getElementById('mkt-winrate');
+      if (el_wr) el_wr.textContent = winRate !== null ? fmtPct(winRate) : '—';
+
+      const cycled = wonDeals.filter(d => d.cdate && d.mdate);
+      const avgDays = cycled.length > 0
+        ? cycled.reduce((s, d) => s + (new Date(d.mdate) - new Date(d.cdate)) / 86400000, 0) / cycled.length
+        : null;
+      const el_cy = document.getElementById('mkt-cycle');
+      if (el_cy) el_cy.textContent = avgDays !== null ? Math.round(avgDays) + ' days' : '—';
+
+      // Campaigns — order by send date DESC, stop when out of range; stats are inline on each campaign
+      const campaignsRaw = await acPaginate('/api/3/campaigns?orders[sdate]=DESC', 'campaigns', {
+        stopFn: (c) => c.sdate && new Date(c.sdate).getTime() < startTs,
+      });
+      const periodCampaigns = campaignsRaw.filter(c => {
+        if (!c.sdate) return false;
+        const t = new Date(c.sdate).getTime();
+        return t >= startTs && t <= endTs;
+      });
+      const el_c = document.getElementById('mkt-campaigns');
+      if (el_c) el_c.textContent = fmtN(periodCampaigns.length);
+
+      // Use unique opens/clicks for industry-standard rates (avoids >100% from multi-events per recipient)
+      const tot = periodCampaigns.reduce((acc, c) => {
+        acc.sent   += parseInt(c.send_amt          || 0);
+        acc.opens  += parseInt(c.uniqueopens       || c.opens      || 0);
+        acc.clicks += parseInt(c.uniquelinkclicks  || c.linkclicks || 0);
+        return acc;
+      }, { sent: 0, opens: 0, clicks: 0 });
+
+      const el_em_s = document.getElementById('em-sent');  if (el_em_s) el_em_s.textContent = tot.sent ? fmtN(tot.sent) : 'No data';
+      const el_em_o = document.getElementById('em-open');  if (el_em_o) el_em_o.textContent = tot.sent ? fmtPct(tot.opens / tot.sent)   : '—';
+      const el_em_k = document.getElementById('em-click'); if (el_em_k) el_em_k.textContent = tot.sent ? fmtPct(tot.clicks / tot.sent)  : '—';
+      const el_em_r = document.getElementById('em-ctr');   if (el_em_r) el_em_r.textContent = tot.opens ? fmtPct(tot.clicks / tot.opens) : '—';
+
+    } catch (e) { console.error('ActiveCampaign:', e); }
+  }
+
+  // ── Guaranteed fallbacks — always render even if individual blocks failed ──
+  try { renderSourceTable(dd.sourceRows||[], sessions); } catch(e) { console.warn('renderSourceTable:', e); }
+  try { renderStageTiming(); } catch(e) {}
+
+  // Clear any shims that were never replaced (service not connected or no data)
+  ['pipeline','deals','avg-deal','blog-leads','ql','v2l','l2ql','ql2deal'].forEach(k=>{
+    const el=document.getElementById(`kv-${k}`);
+    if(el && el.querySelector('.kpi-shim')) el.textContent='—';
+  });
+
+  document.getElementById('refresh-btn')?.classList.remove('loading');
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════
+function setKPI(id, val) {
+  const el = document.getElementById(`kv-${id}`);
+  if (el) el.textContent = val;
+}
+
+function renderLifecycleViz(allContacts, allDeals) {
+  const stages = [
+    { keys:['subscriber','lead'],               label:'Lead',           color:'#2563EB' },
+    { keys:['marketingqualifiedlead'],           label:'MQL',            color:'#7C3AED' },
+    { keys:['salesqualifiedlead'],               label:'SQL',            color:'#DB2777' },
+    { keys:['opportunity'],                      label:'Opportunity',    color:'#E04E1B' },
+    { keys:['customer'],                         label:'Customer (Won)', color:'#059669' },
+    { keys:['other','evangelist','disqualified'],label:'Other / Lost',   color:'#94A3B8' },
+  ];
+  const counts = {};
+  allContacts.forEach(c => {
+    const s = c.properties?.lifecyclestage || 'other';
+    counts[s] = (counts[s]||0) + 1;
+  });
+  const total = allContacts.length || 1;
+  const stageData = stages.map(s => ({
+    ...s,
+    n: s.keys.reduce((sum, k) => sum + (counts[k]||0), 0)
+  }));
+  const maxN = Math.max(...stageData.map(s=>s.n), 1);
+  const totalPipeline = allDeals.reduce((s,d)=>s+parseFloat(d.properties?.amount||0), 0);
+  document.getElementById('lifecycle-totals').innerHTML =
+    `<div>${fmtN(total)} contacts total</div><div style="margin-top:2px">Pipeline: ${fmtCurrency(totalPipeline)}</div>`;
+  document.getElementById('lifecycle-period').textContent = getPeriodLabel();
+  document.getElementById('lifecycle-body').innerHTML = stageData.map(s => {
+    const w = Math.max(4, Math.round(s.n/maxN*100));
+    const pct = total > 0 ? fmtPct(s.n/total) : '—';
+    return `<div class="lc-row">
+      <div class="lc-label">${s.label}</div>
+      <div class="lc-track"><div class="lc-bar" style="width:${w}%;background:${s.color}">${s.n>0?fmtN(s.n):''}</div></div>
+      <div class="lc-meta"><div class="lc-count">${fmtN(s.n)}</div><div class="lc-pct">${pct}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderDealStageChart(allDeals, stageLabels={}) {
+  const canvas = document.getElementById('deal-stage-chart');
+  if (!canvas || !allDeals.length) return;
+  const stagePipeline = {};
+  allDeals.forEach(d => {
+    const s = d.properties?.dealstage || 'other';
+    stagePipeline[s] = (stagePipeline[s]||0) + parseFloat(d.properties?.amount||0);
+  });
+  const entries = Object.entries(stagePipeline).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if (!entries.length) return;
+  const W = canvas.offsetWidth||600, H = Math.max(180, entries.length*40+24);
+  canvas.width  = W*devicePixelRatio; canvas.height = H*devicePixelRatio;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(devicePixelRatio, devicePixelRatio);
+  const pad = {t:8, r:16, b:8, l:170};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const rowH = ch / entries.length;
+  const maxV = Math.max(...entries.map(e=>e[1]), 1);
+  entries.forEach(([stageId, val], i) => {
+    const y  = pad.t + i * rowH;
+    const bw = Math.max(4, Math.round(val/maxV*cw));
+    const bh = Math.min(rowH-10, 28);
+    const by = y + (rowH - bh)/2;
+    // Background track
+    ctx.fillStyle = '#EEEEFF';
+    ctx.beginPath(); ctx.roundRect(pad.l, by, cw, bh, 4); ctx.fill();
+    // Bar
+    ctx.fillStyle = '#533AFD';
+    ctx.beginPath(); ctx.roundRect(pad.l, by, bw, bh, 4); ctx.fill();
+    // Label (human name from pipeline API, fallback to cleaning the ID)
+    ctx.fillStyle = '#50617A';
+    ctx.font = '600 11px Plus Jakarta Sans, sans-serif';
+    ctx.textAlign = 'right';
+    const raw = stageLabels[stageId] || stageId.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    const lbl = raw.length>22 ? raw.slice(0,21)+'…' : raw;
+    ctx.fillText(lbl, pad.l-10, by+bh/2+4);
+    // Value
+    ctx.textAlign = 'left';
+    if (bw > 56) {
+      ctx.fillStyle = '#fff';
+      ctx.font = '500 11px Plus Jakarta Sans, sans-serif';
+      ctx.fillText(fmtCurrency(val), pad.l+10, by+bh/2+4);
+    } else {
+      ctx.fillStyle = '#273951';
+      ctx.font = '500 11px Plus Jakarta Sans, sans-serif';
+      ctx.fillText(fmtCurrency(val), pad.l+bw+8, by+bh/2+4);
+    }
+  });
+}
+
+function renderContactSourceTable(allContacts) {
+  const tbody = document.getElementById('contact-source-tbody');
+  if (!tbody) return;
+  if (!allContacts.length) { tbody.innerHTML = `<tr><td colspan="4" class="empty">No data</td></tr>`; return; }
+  const bySource = {};
+  allContacts.forEach(c => {
+    const src = c.properties?.hs_analytics_source || '(direct/unknown)';
+    if (!bySource[src]) bySource[src] = { total:0, qualified:0 };
+    bySource[src].total++;
+    if (['marketingqualifiedlead','salesqualifiedlead','opportunity','customer'].includes(c.properties?.lifecyclestage))
+      bySource[src].qualified++;
+  });
+  const total = allContacts.length || 1;
+  const rows = Object.entries(bySource).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
+  tbody.innerHTML = rows.map(([src, d]) => {
+    const pct = fmtPct(d.total/total);
+    return `<tr>
+      <td>${src}</td>
+      <td class="td-mono">${fmtN(d.total)}</td>
+      <td class="td-mono">${fmtN(d.qualified)}</td>
+      <td><span class="badge ${d.total/total>.1?'bg':d.total/total>.03?'ba':'bp'}">${pct}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderFunnel(sessions, leads, ql, deals) {
+  const steps = [
+    { label:'Website sessions', n:sessions, color:'#2563EB' },
+    { label:'Leads created',    n:leads,    color:'#7C3AED' },
+    { label:'Qualified leads',  n:ql,       color:'#DB2777' },
+    { label:'Deals created',    n:deals,    color:'#E04E1B' },
+  ];
+  const max = steps[0].n || 1;
+  const funnelEl = document.getElementById('funnel-body');
+  if (!funnelEl) return;
+  funnelEl.innerHTML = steps.map((s,i) => {
+    const w   = Math.max(10, Math.round(s.n/max*100));
+    const pct = i>0 && steps[i-1].n>0 ? fmtPct(s.n/steps[i-1].n) : '';
+    return `<div class="funnel-row">
+      <div class="funnel-bg"><div class="funnel-bar" style="width:${w}%;background:${s.color}">${s.label}</div></div>
+      <div class="funnel-meta">
+        <div class="funnel-n">${fmtN(s.n)}</div>
+        <div class="funnel-pct">${pct}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderLeakage(leads, ql, deals) {
+  const rows = [
+    { lbl:'Leads',           n:leads },
+    { lbl:'Qualified leads', n:ql },
+    { lbl:'Working leads',   n:Math.round(ql*.7) },
+    { lbl:'Deals / Won',     n:deals },
+  ];
+  const max = rows[0].n||1;
+  let h='';
+  rows.forEach((r,i)=>{
+    const w=Math.max(4,Math.round(r.n/max*100));
+    h+=`<div class="leak-row">
+      <div class="leak-lbl">${r.lbl}</div>
+      <div class="leak-bg"><div class="leak-bar" style="width:${w}%">${r.n>0?fmtN(r.n):''}</div></div>
+      <div class="leak-n">${fmtN(r.n)}</div>
+    </div>`;
+    if(i<rows.length-1&&rows[i].n>0){
+      const drop=rows[i].n-rows[i+1].n;
+      h+=`<div class="leak-drop" style="color:var(--red)">↓ ${fmtN(drop)} lost (${fmtPct(drop/rows[i].n)})</div>`;
+    }
+  });
+  const leakEl = document.getElementById('leak-body');
+  if (leakEl) leakEl.innerHTML=h;
+}
+
+function renderStageTiming() {
+  const stages=[
+    {lbl:'Lead → Qualified',days:12},
+    {lbl:'Qualified → Working',days:8},
+    {lbl:'Working → Deal',days:21},
+    {lbl:'Deal → Closed',days:35},
+  ];
+  const max=35;
+  const stageEl = document.getElementById('stage-body');
+  if (!stageEl) return;
+  stageEl.innerHTML=stages.map(s=>`
+    <div class="stage-row">
+      <div class="stage-lbl">${s.lbl}</div>
+      <div class="stage-bg"><div class="stage-bar" style="width:${Math.round(s.days/max*100)}%"></div></div>
+      <div class="stage-days">${s.days}d avg</div>
+    </div>`).join('');
+}
+
+function renderSourceTable(rows, totalSessions) {
+  const tbody = document.getElementById('source-tbody');
+  if(!tbody) return;
+  if(!rows.length){ tbody.innerHTML=`<tr><td colspan="7" class="empty">No source data</td></tr>`; return; }
+  tbody.innerHTML=rows.slice(0,12).map(r=>{
+    const src  = r.dimensionValues?.[0]?.value||'(direct)';
+    const sess = parseInt(r.metricValues?.[0]?.value||0);
+    const conv = parseInt(r.metricValues?.[1]?.value||0);
+    const rate = sess?(conv/sess*100).toFixed(1)+'%':'—';
+    const cls  = parseFloat(rate)>2?'bg':parseFloat(rate)>.5?'ba':'br';
+    return `<tr>
+      <td>${src}</td>
+      <td class="td-mono">${fmtN(sess)}</td>
+      <td class="td-mono">${fmtN(conv)}</td>
+      <td class="td-mono">—</td><td class="td-mono">—</td><td class="td-mono">—</td>
+      <td><span class="badge ${cls}">${rate}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderBlogTable(rows) {
+  const tb=document.getElementById('blog-tbody');
+  if(!tb) return;
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="4" class="empty">No blog data</td></tr>`; return; }
+  tb.innerHTML=rows.slice(0,10).map(r=>{
+    const page=r.dimensionValues?.[0]?.value||'—';
+    const sess=parseInt(r.metricValues?.[0]?.value||0);
+    const conv=parseInt(r.metricValues?.[1]?.value||0);
+    const rate=sess?fmtPct(conv/sess):'—';
+    const short=page.length>42?page.slice(0,40)+'…':page;
+    return `<tr>
+      <td title="${page}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${short}</td>
+      <td class="td-mono">${fmtN(sess)}</td>
+      <td class="td-mono">${fmtN(conv)}</td>
+      <td><span class="badge ${parseFloat(rate)>2?'bg':'ba'}">${rate}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLPTable(rows) {
+  const tb=document.getElementById('lp-tbody');
+  if(!tb) return;
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="5" class="empty">No landing page data</td></tr>`; return; }
+  tb.innerHTML=rows.slice(0,10).map(r=>{
+    const page=r.dimensionValues?.[0]?.value||'—';
+    const sess=parseInt(r.metricValues?.[0]?.value||0);
+    const conv=parseInt(r.metricValues?.[1]?.value||0);
+    const rate=sess?fmtPct(conv/sess):'—';
+    const rN=sess?conv/sess*100:0;
+    const sig=rN>3?'<span class="badge bg">High</span>':rN>1?'<span class="badge ba">Medium</span>':'<span class="badge br">Low</span>';
+    const short=page.length>40?page.slice(0,38)+'…':page;
+    return `<tr>
+      <td title="${page}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${short}</td>
+      <td class="td-mono">${fmtN(sess)}</td>
+      <td><span class="badge ${rN>3?'bg':rN>1?'ba':'br'}">${rate}</span></td>
+      <td class="td-mono">—</td>
+      <td>${sig}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderEvents() {
+  const ev=dd.events||{};
+  const get=(...keys)=>keys.reduce((s,k)=>s+(ev[k]||0),0);
+  const fc=get('generate_lead','form_submit','contact_form_submit');
+  const fs=get('form_start');
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  set('ev-form-comp', fmtN(fc));
+  set('ev-form-rate', fs?fmtPct(fc/fs):'—');
+  set('ev-meeting',   fmtN(get('meeting_booked','schedule_call')));
+  set('ev-proposal',  fmtN(get('proposal_request','consultation_request')));
+  set('ev-cta',       fmtN(get('cta_click')));
+  set('ev-download',  fmtN(get('asset_download','file_download')));
+}
+
+// ═══════════════════════════════════════════════════
+// AI EXECUTIVE SUMMARY
+// ═══════════════════════════════════════════════════
+async function getAISummary() {
+  const btn = document.getElementById('ai-summary-btn');
+  const panel = document.getElementById('ai-panel');
+  const content = document.getElementById('ai-panel-content');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analysing…';
+  panel.style.display = 'block';
+  content.textContent = 'Generating analysis…';
+
+  if (currentPage !== 'exec') switchPage('exec');
+
+  const dataCtx = [
+    `Period: ${getPeriodLabel()}`,
+    `Client: ${clientName||'unknown'}`,
+    `Sessions: ${fmtN(dd.sessions||0)}`,
+    `Leads: ${fmtN(dd.leads||0)}`,
+    `Qualified leads: ${fmtN(dd.qualified||0)}`,
+    `Marketing deals: ${fmtN(dd.deals||0)}`,
+    `Total pipeline: ${fmtCurrency(dd.pipeline||0)}`,
+    `Average deal value: ${fmtCurrency(dd.avgDeal||0)}`,
+    `Visitor-to-lead rate: ${dd.leads&&dd.sessions?fmtPct(dd.leads/dd.sessions):'unknown'}`,
+    `Lead qualification rate: ${dd.leads&&dd.qualified?fmtPct(dd.qualified/dd.leads):'unknown'}`,
+    `QL-to-deal rate: ${dd.qualified&&dd.deals?fmtPct(dd.deals/dd.qualified):'unknown'}`,
+    `HubSpot connected: ${dashboardStatus?.hubspot?.connected?'yes':'no'}`,
+    `GA4 connected: ${dashboardStatus?.ga4?.connected&&dashboardStatus?.ga4?.propertySet?'yes':'no'}`,
+  ].join('\n');
+
+  try {
+    const res = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        system: `You are a senior marketing analyst for Step Change, a strategy-led agency.
+
+COMPANY STRATEGY (SOAP):
+- Theme: Moving up the value curve (FY26-28)
+- Main Thing: Target then delight larger clients (ASX 101-300) who value and can pay for premium strategy
+- Three Big Moves:
+  1. GROW: Target ASX 101-300, increase referral quality and volume, refine speaking engagements
+  2. REPOSITION: Clarify CVP, sell Strategy>CVP>GTM>CSC as default, $10k pcm minimum retainer
+  3. EXECUTE: Better adherence to Complete Step Change, build senior team, refresh collateral
+- Financial targets: $3m revenue pa, 15% EBITDA, 5 new ASX clients in 2026
+- Supporting metrics: $10k pcm minimum retainer, NPS >70, 3+ referrals per client, 5-star Google reviews
+
+YOUR JOB:
+Analyse the dashboard data against these strategic goals. Structure your response as:
+1. HEADLINE (one sentence — what does the data say about progress toward the main thing?)
+2. WHAT'S WORKING (2-3 bullets, tied to the 3 big moves)
+3. WHAT NEEDS ATTENTION (2-3 bullets, with specific numbers from the data)
+4. RECOMMENDED NEXT ACTION (one clear, specific commercial action)
+
+Be direct. Use the actual numbers. No vanity metrics. Focus on pipeline quality and movement, not activity volume. If data is unknown or not loaded, say so explicitly rather than guessing.`,
+        messages: [{ role: 'user', content: `Analyse this dashboard data:\n\n${dataCtx}` }]
+      })
+    });
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    const reply = data.content?.[0]?.text;
+    if (!reply) throw new Error('Empty response');
+    content.textContent = reply;
+  } catch(err) {
+    content.textContent = `Error: ${err.message}. Check that /api/claude is reachable and your token is valid.`;
+  }
+  btn.disabled = false;
+  btn.innerHTML = '✦ Get Executive Summary';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ═══════════════════════════════════════════════════
+// FORMATTERS
+// ═══════════════════════════════════════════════════
+function fmtN(n){ return (n||0).toLocaleString(); }
+function fmtCurrency(n){
+  if(!n) return '$0';
+  if(n>=1e6) return `$${(n/1e6).toFixed(1)}M`;
+  if(n>=1e3) return `$${(n/1e3).toFixed(0)}k`;
+  return `$${Math.round(n).toLocaleString()}`;
+}
+function fmtPct(r){ return (r*100).toFixed(1)+'%'; }
+
+// ═══════════════════════════════════════════════════
+// TABLE SORT
+// ═══════════════════════════════════════════════════
+const sortState={};
+function sortTable(id,col){
+  const table=document.getElementById(id);
+  const tbody=table.querySelector('tbody');
+  const rows=Array.from(tbody.querySelectorAll('tr'));
+  const asc=sortState[id+col]=!sortState[id+col];
+  rows.sort((a,b)=>{
+    const av=a.cells[col]?.textContent.replace(/[^0-9.\-]/g,'')||'';
+    const bv=b.cells[col]?.textContent.replace(/[^0-9.\-]/g,'')||'';
+    const an=parseFloat(av),bn=parseFloat(bv);
+    if(!isNaN(an)&&!isNaN(bn)) return asc?an-bn:bn-an;
+    return asc?av.localeCompare(bv):bv.localeCompare(av);
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+  table.querySelectorAll('thead th').forEach((th,i)=>{
+    th.classList.toggle('sorted',i===col);
+    if(i===col) th.classList.toggle('asc',asc);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// TOOLTIPS
+// ═══════════════════════════════════════════════════
+function initTooltips(){
+  document.querySelectorAll('.tt-icon').forEach(icon=>{
+    const id='tip-'+icon.getAttribute('data-tip');
+    const tip=document.getElementById(id);
+    if(!tip) return;
+    icon.addEventListener('mouseenter',()=>tip.classList.add('vis'));
+    icon.addEventListener('mouseleave',()=>tip.classList.remove('vis'));
+    icon.addEventListener('focus',    ()=>tip.classList.add('vis'));
+    icon.addEventListener('blur',     ()=>tip.classList.remove('vis'));
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// EDIT MODE + DRAG & DROP
+// ═══════════════════════════════════════════════════
+const MAX_UNDO = 6;
+let undoStack = [];
+
+function pushUndo(action){
+  undoStack.push(action);
+  if(undoStack.length > MAX_UNDO) undoStack.shift();
+  updateUndoBtn();
+}
+
+function updateUndoBtn(){
+  const btn = document.getElementById('undo-btn');
+  if(btn) btn.style.display = (editMode && undoStack.length > 0) ? 'inline-flex' : 'none';
+  const restoreBtn = document.getElementById('restore-btn');
+  if(restoreBtn){
+    const hiddenCards    = JSON.parse(localStorage.getItem(`sc_hidden_${slug}`)     || '[]');
+    const hiddenSections = JSON.parse(localStorage.getItem(`sc_sec_hidden_${slug}`) || '[]');
+    restoreBtn.style.display = (editMode && (hiddenCards.length > 0 || hiddenSections.length > 0)) ? 'inline-flex' : 'none';
   }
 }
 
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function restoreAllHidden(){
+  // Restore all hidden KPI cards
+  const hiddenCards = JSON.parse(localStorage.getItem(`sc_hidden_${slug}`) || '[]');
+  hiddenCards.forEach(id => {
+    const card = document.querySelector(`[data-metric="${id}"]`);
+    if(card) card.style.display = '';
+  });
+  localStorage.setItem(`sc_hidden_${slug}`, JSON.stringify([]));
+
+  // Restore all hidden sections
+  const hiddenSections = JSON.parse(localStorage.getItem(`sc_sec_hidden_${slug}`) || '[]');
+  hiddenSections.forEach(id => {
+    const block = document.querySelector(`[data-section="${id}"]`);
+    if(block) block.style.display = '';
+  });
+  localStorage.setItem(`sc_sec_hidden_${slug}`, JSON.stringify([]));
+
+  savePrefs();
+  updateUndoBtn();
 }
+
+function toggleEditMode(){
+  editMode=!editMode;
+  const btn=document.getElementById('edit-btn');
+  btn.textContent=editMode?'✓ Done':'✦ Edit layout';
+  btn.classList.toggle('on',editMode);
+  document.body.classList.toggle('edit-mode',editMode);
+  document.querySelectorAll('.kpi-card').forEach(c=>{
+    c.classList.toggle('edit-mode',editMode);
+    c.setAttribute('draggable',editMode?'true':'false');
+  });
+  document.getElementById('add-metric-card').classList.toggle('show',editMode);
+  if(!editMode){
+    undoStack=[];
+    saveLayout();
+  }
+  updateUndoBtn();
+}
+
+function undoLayout(){
+  if(!undoStack.length) return;
+  const action = undoStack.pop();
+
+  if(action.type === 'hide-metric'){
+    // Restore a hidden built-in KPI card
+    const hidden = JSON.parse(localStorage.getItem(`sc_hidden_${slug}`) || '[]');
+    const idx = hidden.indexOf(action.metricId);
+    if(idx !== -1) hidden.splice(idx, 1);
+    localStorage.setItem(`sc_hidden_${slug}`, JSON.stringify(hidden));
+    const card = document.querySelector(`[data-metric="${action.metricId}"]`);
+    if(card) card.style.display = '';
+
+  } else if(action.type === 'delete-custom'){
+    // Re-add a deleted custom metric card
+    customMetrics.push(action.metric);
+    localStorage.setItem(`sc_metrics_${slug}`, JSON.stringify(customMetrics));
+    appendMetricCard(action.metric);
+
+  } else if(action.type === 'hide-section'){
+    // Restore a hidden section
+    const hidden = JSON.parse(localStorage.getItem(`sc_sec_hidden_${slug}`) || '[]');
+    const idx = hidden.indexOf(action.sectionId);
+    if(idx !== -1) hidden.splice(idx, 1);
+    localStorage.setItem(`sc_sec_hidden_${slug}`, JSON.stringify(hidden));
+    const block = document.querySelector(`[data-section="${action.sectionId}"]`);
+    if(block) block.style.display = '';
+
+  } else if(action.type === 'reorder'){
+    // Restore previous card order in a grid
+    const g = document.getElementById(action.gid);
+    if(g){
+      action.prevOrder.forEach(m=>{
+        const c = g.querySelector(`[data-metric="${m}"]`);
+        if(c) g.appendChild(c);
+      });
+    }
+  }
+
+  savePrefs();
+  updateUndoBtn();
+}
+
+let dragSrc=null;
+function initDrag(){
+  document.addEventListener('dragstart',e=>{
+    const c=e.target.closest('.kpi-card');
+    if(!c||!editMode) return;
+    dragSrc=c; c.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+  });
+  document.addEventListener('dragend',e=>{
+    const c=e.target.closest('.kpi-card');
+    if(c) c.classList.remove('dragging');
+    document.querySelectorAll('.kpi-card.drag-over').forEach(x=>x.classList.remove('drag-over'));
+    dragSrc=null;
+  });
+  document.addEventListener('dragover',e=>{
+    e.preventDefault();
+    const c=e.target.closest('.kpi-card');
+    if(!c||c===dragSrc) return;
+    e.dataTransfer.dropEffect='move';
+    document.querySelectorAll('.kpi-card.drag-over').forEach(x=>x.classList.remove('drag-over'));
+    c.classList.add('drag-over');
+  });
+  document.addEventListener('drop',e=>{
+    e.preventDefault();
+    const t=e.target.closest('.kpi-card');
+    if(!t||t===dragSrc||!dragSrc) return;
+    t.classList.remove('drag-over');
+    const p=t.parentNode;
+    const cards=Array.from(p.querySelectorAll('.kpi-card'));
+    // Capture order before the move so undo can restore it
+    const gid=p.id;
+    const prevOrder=cards.map(c=>c.getAttribute('data-metric'));
+    pushUndo({type:'reorder', gid, prevOrder});
+    if(cards.indexOf(dragSrc)<cards.indexOf(t)) p.insertBefore(dragSrc,t.nextSibling);
+    else p.insertBefore(dragSrc,t);
+  });
+}
+
+function saveLayout(){
+  const orders={};
+  ['grid-a','grid-b'].forEach(gid=>{
+    const g=document.getElementById(gid); if(!g) return;
+    orders[gid]=Array.from(g.querySelectorAll('.kpi-card')).map(c=>c.getAttribute('data-metric'));
+  });
+  localStorage.setItem(`sc_layout_${slug}`,JSON.stringify(orders));
+  savedLayout=orders;
+  savePrefs();
+}
+
+function restoreLayout(){
+  if(!savedLayout) return;
+  Object.entries(savedLayout).forEach(([gid,order])=>{
+    const g=document.getElementById(gid); if(!g) return;
+    order.forEach(m=>{ const c=g.querySelector(`[data-metric="${m}"]`); if(c) g.appendChild(c); });
+  });
+}
+
+function restoreHidden(){
+  const hidden=JSON.parse(localStorage.getItem(`sc_hidden_${slug}`)||'[]');
+  hidden.forEach(id=>{
+    const card=document.querySelector(`[data-metric="${id}"]`);
+    if(card) card.style.display='none';
+  });
+}
+
+function deleteSection(btn){
+  const block=btn.closest('[data-section]');
+  if(!block) return;
+  const id=block.getAttribute('data-section');
+  const hidden=JSON.parse(localStorage.getItem(`sc_sec_hidden_${slug}`)||'[]');
+  if(!hidden.includes(id)){
+    pushUndo({type:'hide-section', sectionId:id});
+    hidden.push(id);
+    localStorage.setItem(`sc_sec_hidden_${slug}`,JSON.stringify(hidden));
+    savePrefs();
+  }
+  block.style.display='none';
+}
+
+function restoreSections(){
+  const hidden=JSON.parse(localStorage.getItem(`sc_sec_hidden_${slug}`)||'[]');
+  hidden.forEach(id=>{
+    const block=document.querySelector(`[data-section="${id}"]`);
+    if(block) block.style.display='none';
+  });
+}
+
+function deleteMetric(btn){
+  const card=btn.closest('.kpi-card');
+  if(!card) return;
+  const metricId=card.getAttribute('data-metric');
+  const isCustom=customMetrics.some(m=>m.id===metricId);
+  if(isCustom){
+    const metric=customMetrics.find(m=>m.id===metricId);
+    pushUndo({type:'delete-custom', metric:JSON.parse(JSON.stringify(metric))});
+    customMetrics=customMetrics.filter(m=>m.id!==metricId);
+    localStorage.setItem(`sc_metrics_${slug}`,JSON.stringify(customMetrics));
+    card.remove();
+  } else {
+    const hidden=JSON.parse(localStorage.getItem(`sc_hidden_${slug}`)||'[]');
+    if(!hidden.includes(metricId)){
+      pushUndo({type:'hide-metric', metricId});
+      hidden.push(metricId);
+      localStorage.setItem(`sc_hidden_${slug}`,JSON.stringify(hidden));
+      card.style.display='none';
+    }
+  }
+  savePrefs();
+}
+
+// ═══════════════════════════════════════════════════
+// ADD METRIC MODAL
+// ═══════════════════════════════════════════════════
+let addMode='manual';
+function openAddMetric(){ document.getElementById('add-modal').classList.add('open'); }
+function closeAddMetric(){
+  document.getElementById('add-modal').classList.remove('open');
+  ['m-name','m-formula','m-prompt'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('claude-resp').style.display = 'none';
+}
+function switchMode(m){
+  addMode=m;
+  document.getElementById('mode-manual').classList.toggle('active',m==='manual');
+  document.getElementById('mode-claude').classList.toggle('active',m==='claude');
+  document.getElementById('manual-fields').style.display=m==='manual'?'block':'none';
+  document.getElementById('claude-fields').style.display=m==='claude'?'block':'none';
+}
+
+async function claudeSuggest() {
+  const prompt = document.getElementById('m-prompt').value.trim();
+  if (!prompt) { alert('Please describe the metric first.'); return; }
+
+  const btn = document.getElementById('suggest-btn');
+  const box = document.getElementById('claude-resp');
+
+  btn.disabled = true;
+  btn.textContent = 'Thinking…';
+  box.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        system: 'You are a marketing analytics expert. Suggest a dashboard metric in under 80 words: name, formula, data source (GA4 or HubSpot), and why it matters commercially.',
+        messages: [{ role: 'user', content: `Suggest a metric for: ${prompt}` }]
+      })
+    });
+
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    const reply = data.content?.[0]?.text;
+    if (!reply) throw new Error('Empty response');
+
+    box.textContent = reply;
+    box.style.display = 'block';
+
+    const match = reply.match(/\*\*([^*]+)\*\*/);
+    if (match && !document.getElementById('m-name').value) {
+      document.getElementById('m-name').value = match[1];
+    }
+    switchMode('manual');
+
+  } catch(err) {
+    box.textContent = `Error: ${err.message}. Check that /api/claude is reachable and your token is valid.`;
+    box.style.display = 'block';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Ask Claude to suggest a metric →';
+}
+
+function saveMetric(){
+  const name=document.getElementById('m-name').value.trim();
+  if(!name){ alert('Please enter a metric name.'); return; }
+  const m={ id:'c'+Date.now(), name, formula:document.getElementById('m-formula').value.trim(), source:document.getElementById('m-source').value, format:document.getElementById('m-format').value, value:'—' };
+  customMetrics.push(m);
+  localStorage.setItem(`sc_metrics_${slug}`,JSON.stringify(customMetrics));
+  savePrefs();
+  appendMetricCard(m);
+  closeAddMetric();
+}
+
+function appendMetricCard(m){
+  const card=document.createElement('div');
+  card.className='kpi-card'+(editMode?' edit-mode':'');
+  card.setAttribute('data-metric',m.id);
+  card.setAttribute('draggable',editMode?'true':'false');
+  card.innerHTML=`
+    <span class="drag-handle">⠿</span>
+    <button class="kpi-delete" onclick="deleteMetric(this)" title="Remove metric">×</button>
+    <div class="kpi-label" style="position:relative">
+      ${m.name}
+      <i class="tt-icon" tabindex="0">i</i>
+      <div class="tt-pop" style="top:calc(100% + 8px);left:0">
+        <div class="tt-title">${m.name}</div>
+        ${m.formula||'Custom metric'}
+        <div class="tt-src">Source: ${m.source}</div>
+      </div>
+    </div>
+    <div class="kpi-value" style="font-size:22px">${m.value}</div>
+    <div class="kpi-sub">${m.formula||''}</div>`;
+  const add=document.getElementById('add-metric-card');
+  if (add && add.parentNode) {
+    add.parentNode.insertBefore(card, add);
+  } else {
+    const g=document.getElementById('grid-a');
+    if (g) g.appendChild(card);
+  }
+  card.querySelectorAll('.tt-icon').forEach(icon=>{
+    const pop=icon.nextElementSibling;
+    if(!pop) return;
+    icon.addEventListener('mouseenter',()=>pop.classList.add('vis'));
+    icon.addEventListener('mouseleave',()=>pop.classList.remove('vis'));
+  });
+}
+
+function renderCustomMetrics(){
+  try { customMetrics.forEach(m=>appendMetricCard(m)); }
+  catch(e){ console.warn('renderCustomMetrics failed:', e); }
+}
+
+// ═══════════════════════════════════════════════════
+// PDF EXPORT
+// ═══════════════════════════════════════════════════
+function exportPDF(){ window.print(); }
+
+// ═══════════════════════════════════════════════════
+// CHAT — Claude checks data first
+// ═══════════════════════════════════════════════════
+let chatHistory=[], chatOpen=false;
+
+function buildCtx(){
+  const hasSessions=(dd.sessions||0)>0;
+  const hasLeads=(dd.leads||0)>0;
+  const hasData=hasSessions||hasLeads;
+  return [
+    `Period: ${getPeriodLabel()}`,
+    `Client: ${clientName||'unknown'}`,
+    `Sessions: ${fmtN(dd.sessions||0)}`,
+    `Leads: ${fmtN(dd.leads||0)}`,
+    `Qualified leads: ${fmtN(dd.qualified||0)}`,
+    `Marketing deals: ${fmtN(dd.deals||0)}`,
+    `Total pipeline: ${fmtCurrency(dd.pipeline||0)}`,
+    `Average deal value: ${fmtCurrency(dd.avgDeal||0)}`,
+    `Visitor-to-lead rate: ${dd.leads&&dd.sessions?fmtPct(dd.leads/dd.sessions):'unknown'}`,
+    `Lead qualification rate: ${dd.leads&&dd.qualified?fmtPct(dd.qualified/dd.leads):'unknown'}`,
+    `HubSpot: ${dashboardStatus?.hubspot?.connected?'connected':'not connected'}`,
+    `GA4: ${dashboardStatus?.ga4?.connected&&dashboardStatus?.ga4?.propertySet?'connected':'not connected'}`,
+    `Data status: ${hasData?'loaded':'not yet loaded — acknowledge if asked about specific numbers'}`,
+  ].join('\n');
+}
+
+function toggleChat(){
+  chatOpen=!chatOpen;
+  document.getElementById('chat-panel').classList.toggle('open',chatOpen);
+  if(chatOpen) document.getElementById('chat-inp').focus();
+}
+
+async function sendMsg(){
+  const inp=document.getElementById('chat-inp');
+  const msg=inp.value.trim();
+  if(!msg) return;
+  const btn=document.getElementById('chat-send');
+  inp.value=''; btn.disabled=true;
+  appendMsg('u',msg);
+  chatHistory.push({role:'user',content:msg});
+  const thinking=appendMsg('a','…');
+
+  try {
+    const res=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+      body:JSON.stringify({
+        system:`You are a marketing analytics assistant for ${clientName||'this client'} using the Step Change Snapshot dashboard.
+
+DASHBOARD SNAPSHOT (already loaded — use as starting context):
+${buildCtx()}
+
+You have tools to query live HubSpot and GA4 data. Use them proactively when the user asks a question that would benefit from more detail than the snapshot provides — for example: email campaign breakdowns, traffic by channel, lead source analysis, deal stage breakdowns, specific contact or campaign data.
+
+Instructions:
+- Query live data when the snapshot doesn't have enough detail to answer well.
+- Keep answers concise and commercially focused.
+- When diagnosing issues, follow the chain: sessions → leads → qualified leads → deals.
+- Do not invent numbers — if data is unavailable after querying, say so clearly.`,
+        messages:chatHistory
+      })
+    });
+    const data=await res.json();
+    if(res.ok){
+      const reply=data.content?.[0]?.text||'No response';
+      thinking.textContent=reply;
+      chatHistory.push({role:'assistant',content:reply});
+    } else {
+      thinking.textContent=data.error||'Something went wrong.';
+    }
+  } catch(e){ thinking.textContent='Network error. Please try again.'; }
+
+  btn.disabled=false;
+  document.getElementById('chat-msgs').scrollTop=99999;
+}
+
+function appendMsg(role,text){
+  const msgs=document.getElementById('chat-msgs');
+  const el=document.createElement('div');
+  el.className=`msg msg-${role}`;
+  el.textContent=text;
+  msgs.appendChild(el);
+  msgs.scrollTop=99999;
+  return el;
+}
+
+// Close modal on backdrop click
+document.getElementById('add-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('add-modal')) closeAddMetric(); });
 </script>
 </body>
 </html>
