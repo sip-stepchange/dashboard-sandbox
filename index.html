@@ -152,6 +152,10 @@
     .main-content { max-width:1400px; margin:0 auto; padding:28px 24px 100px; }
     .page { display:none; }
     .page.active { display:block; animation:fadeUp .3s cubic-bezier(.22,1,.36,1) both; }
+    .st-tabbar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:22px; }
+    .st-tab { padding:9px 22px; background:transparent; border:1px solid #E2E8F0; border-radius:100px; font-size:13px; font-weight:600; cursor:pointer; color:#64748B; font-family:var(--font); transition:all .15s; }
+    .st-tab:hover { color:var(--navy); }
+    .st-tab.active { background:var(--navy); color:#fff; border-color:var(--navy); }
     .section-lbl { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--light-slate); margin-bottom:12px; margin-top:28px; }
     .section-lbl:first-child { margin-top:0; }
 
@@ -503,6 +507,12 @@
     <!-- ══ PAGE 1: EXECUTIVE SUMMARY ══ -->
     <div class="page active" id="page-exec">
 
+      <!-- ServiceTitan / GA4 tab bar (shown only when ServiceTitan is the connected CRM) -->
+      <div class="st-tabbar" id="st-tabbar" style="display:none">
+        <button class="st-tab active" data-view="overview" type="button" onclick="setStView('overview')">Executive Overview</button>
+        <!-- one tab per channel is generated here by buildChannelTabs() -->
+      </div>
+
       <!-- AI Panel -->
       <div id="ai-panel" style="display:none;background:var(--navy);color:#fff;border-radius:var(--r-card);padding:24px 28px;margin-bottom:24px;position:relative;animation:fadeUp .3s ease both">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -531,7 +541,7 @@
       </div><!-- /sec-block lifecycle -->
 
       <!-- Section B: KPI tiles -->
-      <div class="section-lbl gap-m">Pipeline &amp; Commercial Outcomes</div>
+      <div class="section-lbl gap-m" id="lbl-outcomes">Pipeline &amp; Commercial Outcomes</div>
       <div class="kpi-grid" id="grid-a">
 
         <div class="kpi-card" data-metric="pipeline" draggable="false">
@@ -608,7 +618,34 @@
 
       </div><!-- /grid-a -->
 
-      <div class="section-lbl gap-m">Conversion Funnel Rates</div>
+      <!-- ServiceTitan Executive Overview KPIs (shown only for ServiceTitan clients) -->
+      <div class="kpi-grid" id="grid-st-overview" style="display:none">
+        <div class="kpi-card"><div class="kpi-label">Leads</div><div class="kpi-value" id="kv-st-leads">—</div><div class="kpi-sub">Leads in period</div></div>
+        <div class="kpi-card"><div class="kpi-label">Booked Jobs</div><div class="kpi-value" id="kv-st-booked">—</div><div class="kpi-sub">Jobs created in period</div></div>
+        <div class="kpi-card"><div class="kpi-label">Total Sales</div><div class="kpi-value" id="kv-st-sales">—</div><div class="kpi-sub">Jobs sold / completed</div></div>
+        <div class="kpi-card"><div class="kpi-label">Total Rev</div><div class="kpi-value" id="kv-st-rev">—</div><div class="kpi-sub">Completed job revenue</div></div>
+      </div>
+
+      <!-- Jobs by Channel chart (Executive Overview, ServiceTitan clients only) -->
+      <div class="sec-block" data-section="channel-chart" id="st-channel-chart-section" style="display:none">
+        <div class="section-lbl gap-m">Jobs by Channel</div>
+        <div class="card">
+          <div class="card-body"><canvas id="st-channel-chart" style="width:100%;height:280px"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Leads by Channel chart (Executive Overview, ServiceTitan clients only) -->
+      <div class="sec-block" data-section="leads-chart" id="st-leads-chart-section" style="display:none">
+        <div class="section-lbl gap-m">Leads by Channel</div>
+        <div class="card">
+          <div class="card-body">
+            <canvas id="st-leads-chart" style="width:100%;height:280px"></canvas>
+            <div id="st-leads-note" class="card-sub" style="display:none;padding:12px 4px">Leads by channel are tracked in ServiceTitan Marketing but not yet wired to this dashboard — this populates once the attributed-leads feed is connected and verified at go-live.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-lbl gap-m" id="lbl-funnel">Conversion Funnel Rates</div>
       <div class="kpi-grid" id="grid-b">
 
         <div class="kpi-card" data-metric="ql" draggable="false">
@@ -744,6 +781,7 @@
       <div class="sec-block" data-section="email-perf" data-source="hubspot" style="position:relative">
         <button class="sec-delete" onclick="deleteSection(this)" title="Hide section">×</button>
         <div class="section-lbl gap-t" style="margin-top:16px">Email Performance</div>
+        <div class="card-sub" id="email-unavailable-note" style="display:none;margin:6px 0 4px">Not available with ServiceTitan — ServiceTitan does not provide email marketing data.</div>
         <div class="email-tiles" id="email-tiles">
           <div class="email-tile"><div class="ev-lbl">Emails sent</div><div class="ev-val" id="em-sent">—</div></div>
           <div class="email-tile"><div class="ev-lbl">Open rate</div><div class="ev-val" id="em-open">—</div></div>
@@ -751,6 +789,61 @@
           <div class="email-tile"><div class="ev-lbl">CTR</div><div class="ev-val" id="em-ctr">—</div></div>
         </div>
       </div><!-- /sec-block email-perf -->
+
+      <!-- ServiceTitan-native metrics (shown only when ServiceTitan is the connected CRM) -->
+      <div class="sec-block" data-section="servicetitan-metrics" id="st-metrics-section" style="position:relative;display:none">
+        <button class="sec-delete" onclick="deleteSection(this)" title="Hide section">×</button>
+        <div class="section-lbl gap-t" style="margin-top:16px">ServiceTitan Metrics</div>
+        <div class="email-tiles">
+          <div class="email-tile"><div class="ev-lbl">Jobs completed</div><div class="ev-val" id="st-jobs">—</div></div>
+          <div class="email-tile"><div class="ev-lbl">Avg job value</div><div class="ev-val" id="st-avgjob">—</div></div>
+          <div class="email-tile"><div class="ev-lbl">Estimate → sold rate</div><div class="ev-val" id="st-estconv">—</div></div>
+          <div class="email-tile"><div class="ev-lbl">Total revenue</div><div class="ev-val" id="st-revenue">—</div></div>
+        </div>
+        <div class="card gap-t">
+          <div class="card-header"><div class="card-title">Revenue by Business Unit</div></div>
+          <div class="tbl-wrap">
+            <table id="st-bu-table">
+              <thead><tr><th>Business Unit</th><th>Jobs</th><th>Revenue</th></tr></thead>
+              <tbody id="st-bu-tbody"><tr><td colspan="3" class="empty">—</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /sec-block servicetitan-metrics -->
+
+      <!-- Per-channel detail (one channel tab at a time — ServiceTitan clients only) -->
+      <div class="sec-block" data-section="channel-detail" id="st-channel-section" style="position:relative;display:none">
+        <div class="section-lbl gap-t" id="st-channel-title">Channel</div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Leads</div><div class="kpi-value" id="kv-ch-leads">—</div><div class="kpi-sub">Leads attributed to this channel</div></div>
+          <div class="kpi-card"><div class="kpi-label">Booked Jobs</div><div class="kpi-value" id="kv-ch-booked">—</div><div class="kpi-sub">Jobs from this channel</div></div>
+          <div class="kpi-card"><div class="kpi-label">Total Sales</div><div class="kpi-value" id="kv-ch-sales">—</div><div class="kpi-sub">Jobs sold / completed</div></div>
+          <div class="kpi-card"><div class="kpi-label">Total Rev</div><div class="kpi-value" id="kv-ch-rev">—</div><div class="kpi-sub">Revenue from this channel</div></div>
+        </div>
+        <div class="card gap-t" id="st-channel-engagement-card" style="display:none">
+          <div class="card-header"><div class="card-title">Delivery &amp; Engagement</div><div class="card-sub" id="st-channel-engagement-sub"></div></div>
+          <div class="tbl-wrap">
+            <table><thead><tr><th>Metric</th><th>Actual</th><th>Benchmark</th></tr></thead>
+            <tbody id="st-channel-engagement-tbody"></tbody></table>
+          </div>
+        </div>
+        <div class="card gap-t">
+          <div class="card-header"><div class="card-title">Revenue by Business Unit</div><div class="card-sub">This channel</div></div>
+          <div class="tbl-wrap">
+            <table><thead><tr><th>Business Unit</th><th>Jobs</th><th>Revenue</th></tr></thead>
+            <tbody id="st-channel-bu-tbody"><tr><td colspan="3" class="empty">—</td></tr></tbody></table>
+          </div>
+        </div>
+        <div class="card gap-t">
+          <div class="card-header"><div class="card-title">Jobs in this channel</div><div class="card-sub">Most recent first</div></div>
+          <div class="tbl-wrap">
+            <table id="st-channel-jobs-table">
+              <thead><tr><th>Job</th><th>Booked</th><th>Status</th><th>Completed</th><th>Business Unit</th><th>Value</th></tr></thead>
+              <tbody id="st-channel-jobs-tbody"><tr><td colspan="6" class="empty">—</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /sec-block channel-detail -->
 
       <!-- Section D: GA4 data -->
       <div class="section-lbl gap-m" data-source="ga4">GA4</div>
@@ -1020,7 +1113,8 @@ function showDashboard() {
 function renderConnStatus() {
   const { anthropic, hubspot, ga4 } = dashboardStatus;
   const activecampaign = dashboardStatus.activecampaign || { connected: false };
-  const crmConnected = hubspot.connected || activecampaign.connected;
+  const servicetitan = dashboardStatus.servicetitan || { connected: false };
+  const crmConnected = hubspot.connected || activecampaign.connected || servicetitan.connected;
   const all  = anthropic.connected && crmConnected && ga4.connected && ga4.propertySet;
   const some = anthropic.connected || crmConnected || ga4.connected;
   const dot  = document.getElementById('conn-dot');
@@ -1036,7 +1130,133 @@ function renderConnStatus() {
     dot.className='conn-dot none'; lbl.textContent='Setup needed'; ban.style.display='flex';
   }
   // CRM-aware label patching
-  patchCrmLabels(activecampaign.connected && !hubspot.connected ? 'ActiveCampaign' : 'HubSpot');
+  const crmLabel = servicetitan.connected ? 'ServiceTitan'
+                 : (activecampaign.connected && !hubspot.connected) ? 'ActiveCampaign'
+                 : 'HubSpot';
+  patchCrmLabels(crmLabel);
+
+  // ServiceTitan-specific UI: reveal ST metrics section, flag email as unavailable
+  const stSection = document.getElementById('st-metrics-section');
+  if (stSection) stSection.style.display = servicetitan.connected ? '' : 'none';
+  const emailNote = document.getElementById('email-unavailable-note');
+  if (emailNote) emailNote.style.display = servicetitan.connected ? 'block' : 'none';
+
+  applyServiceTitanLayout();
+}
+
+// ── ServiceTitan tabbed layout ──
+// When ServiceTitan is the connected CRM, the dashboard splits into two tabs
+// (ServiceTitan / GA4) and the sales-CRM-only sections are hidden. HubSpot and
+// ActiveCampaign clients are completely unaffected.
+let stView = 'overview';
+
+function applyServiceTitanLayout() {
+  const isST = !!(dashboardStatus && dashboardStatus.servicetitan && dashboardStatus.servicetitan.connected);
+  const tabbar = document.getElementById('st-tabbar');
+  // Sales-CRM sections + the shared KPI row that ServiceTitan replaces with its own
+  const removeForST = [
+    document.querySelector('[data-section="lifecycle"]'),
+    document.getElementById('lbl-outcomes'),
+    document.getElementById('grid-a'),
+    document.getElementById('lbl-funnel'),
+    document.getElementById('grid-b'),
+    document.querySelector('[data-section="email-perf"]'),
+  ];
+  const gridST = document.getElementById('grid-st-overview');
+  const channelSec = document.getElementById('st-channel-section');
+  const chartSec = document.getElementById('st-channel-chart-section');
+  const leadsSec = document.getElementById('st-leads-chart-section');
+  const filterBtns = [document.getElementById('filter-hs-btn'), document.getElementById('filter-ga4-btn')];
+
+  if (!isST) {
+    if (tabbar) tabbar.style.display = 'none';
+    removeForST.forEach(el => { if (el) el.style.display = ''; });
+    if (gridST) gridST.style.display = 'none';
+    if (channelSec) channelSec.style.display = 'none';
+    if (chartSec) chartSec.style.display = 'none';
+    if (leadsSec) leadsSec.style.display = 'none';
+    filterBtns.forEach(b => { if (b) b.style.display = ''; });
+    return;
+  }
+
+  // ServiceTitan client: show tabs, hide the sales-CRM sections + old source filter
+  if (tabbar) tabbar.style.display = 'flex';
+  removeForST.forEach(el => { if (el) el.style.display = 'none'; });
+  filterBtns.forEach(b => { if (b) b.style.display = 'none'; });
+  setStView(stView || 'overview');
+}
+
+// Build one tab per channel that has data (called after loadData aggregates channels)
+function buildChannelTabs(channelNames) {
+  const bar = document.getElementById('st-tabbar');
+  if (!bar) return;
+  bar.querySelectorAll('.st-tab[data-channel]').forEach(t => t.remove());
+  channelNames.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'st-tab';
+    btn.type = 'button';
+    btn.dataset.channel = name;
+    btn.dataset.view = name;
+    btn.textContent = name;
+    btn.onclick = () => setStView(name);
+    bar.appendChild(btn);
+  });
+  // If the previously-selected channel no longer has data, fall back to overview
+  if (stView !== 'overview' && !channelNames.includes(stView)) stView = 'overview';
+  setStView(stView);
+}
+
+function setStView(v) {
+  stView = v;
+  const isOverview = (v === 'overview');
+  // Executive Overview = everything collated; a channel tab = just the channel detail panel
+  const overviewEls = [
+    document.getElementById('grid-st-overview'),
+    document.getElementById('st-channel-chart-section'),
+    document.getElementById('st-leads-chart-section'),
+    document.querySelector('.section-lbl[data-source="hubspot"]'),
+    document.querySelector('[data-section="deal-stage"]'),
+    document.querySelector('[data-section="contact-source"]'),
+    document.querySelector('[data-section="email"]'),
+    document.getElementById('st-metrics-section'),
+    document.querySelector('.section-lbl[data-source="ga4"]'),
+  ];
+  document.querySelectorAll('.sec-block[data-source="ga4"]').forEach(el => overviewEls.push(el));
+  const channelSec = document.getElementById('st-channel-section');
+  overviewEls.forEach(el => { if (el) el.style.display = isOverview ? '' : 'none'; });
+  if (channelSec) channelSec.style.display = isOverview ? 'none' : '';
+
+  if (!isOverview) {
+    const d = (window.stChannelData && window.stChannelData[v]) || { booked: 0, sales: 0, rev: 0 };
+    const set = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+    set('st-channel-title', v);
+    const chLeads = (window.stChannelLeads && window.stChannelLeads[v] != null) ? window.stChannelLeads[v] : null;
+    set('kv-ch-leads', chLeads != null ? fmtN(chLeads) : '—');
+    set('kv-ch-booked', fmtN(d.booked));
+    set('kv-ch-sales', fmtN(d.sales));
+    set('kv-ch-rev', fmtCurrency(d.rev));
+
+    // Jobs list for this channel
+    const jobs = (window.stChannelJobs && window.stChannelJobs[v]) || [];
+    const fmtDate = s => { if (!s) return '—'; const dt = new Date(s); return isNaN(dt) ? '—' : dt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }); };
+    const tb = document.getElementById('st-channel-jobs-tbody');
+    if (tb) tb.innerHTML = jobs.length
+      ? jobs.slice().sort((a, b) => new Date(b.created || 0) - new Date(a.created || 0)).slice(0, 200)
+          .map(j => `<tr><td>${j.label}</td><td>${fmtDate(j.created)}</td><td>${j.status}</td><td>${fmtDate(j.completed)}</td><td>${j.bu}</td><td>${fmtCurrency(j.value)}</td></tr>`).join('')
+      : '<tr><td colspan="6" class="empty">No jobs in this channel</td></tr>';
+
+    // Revenue by Business Unit for this channel
+    const byBu = {};
+    jobs.forEach(j => { if (!/complete/i.test(j.status || '')) return; const b = j.bu || '—'; if (!byBu[b]) byBu[b] = { jobs: 0, rev: 0 }; byBu[b].jobs++; byBu[b].rev += (j.value || 0); });
+    const buRows = Object.entries(byBu).sort((a, b) => b[1].rev - a[1].rev);
+    const btb = document.getElementById('st-channel-bu-tbody');
+    if (btb) btb.innerHTML = buRows.length
+      ? buRows.map(([b, v]) => `<tr><td>${b}</td><td>${fmtN(v.jobs)}</td><td>${fmtCurrency(v.rev)}</td></tr>`).join('')
+      : '<tr><td colspan="3" class="empty">No data</td></tr>';
+
+    renderChannelEngagement(v);
+  }
+  document.querySelectorAll('#st-tabbar .st-tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
 }
 
 function patchCrmLabels(crmName) {
@@ -1115,6 +1335,8 @@ function toggleSourceFilter(src) {
 }
 
 function applySourceFilter() {
+  // ServiceTitan clients use the tab bar instead of the source filter
+  if (dashboardStatus && dashboardStatus.servicetitan && dashboardStatus.servicetitan.connected) return;
   document.querySelectorAll('[data-source]').forEach(el => {
     if (!activeSourceFilter) {
       el.style.display = '';
@@ -1153,7 +1375,9 @@ function updateFilterLabel() {
     if (s && e) parts.push(`${s} – ${e}`);
   }
   if (activeSourceFilter) {
-    const crmName = (dashboardStatus?.activecampaign?.connected && !dashboardStatus?.hubspot?.connected) ? 'ActiveCampaign' : 'HubSpot';
+    const crmName = dashboardStatus?.servicetitan?.connected ? 'ServiceTitan'
+                  : (dashboardStatus?.activecampaign?.connected && !dashboardStatus?.hubspot?.connected) ? 'ActiveCampaign'
+                  : 'HubSpot';
     parts.push(activeSourceFilter === 'hubspot' ? `${crmName} only` : 'GA4 only');
   }
   const hasFilters = parts.length > 0;
@@ -1196,6 +1420,7 @@ async function loadData() {
   if (refreshBtn) refreshBtn.classList.add('loading');
   const { hubspot, ga4 } = dashboardStatus;
   const activecampaign = dashboardStatus.activecampaign || { connected: false };
+  const servicetitan = dashboardStatus.servicetitan || { connected: false };
   ['pipeline','deals','avg-deal','blog-leads','ql','v2l','l2ql','ql2deal'].forEach(k => {
     const el = document.getElementById(`kv-${k}`); if(el) el.innerHTML = '<div class="kpi-shim"></div>';
     const d=document.getElementById(`kd-${k}`); if(d) d.innerHTML='';
@@ -1226,6 +1451,15 @@ async function loadData() {
       const sd = await ga4Post({ dateRanges:[{startDate,endDate}], metrics:[{name:'sessions'},{name:'newUsers'}] });
       sessions = parseInt(sd?.rows?.[0]?.metricValues?.[0]?.value||0);
       dd.sessions = sessions;
+
+      // Per-channel sessions/conversions — feeds the channel Delivery & Engagement GA4 fallback.
+      // (Verify GA4 metric names — 'conversions' may be 'keyEvents' on some properties.)
+      try {
+        const chg = await ga4Post({ dateRanges:[{startDate,endDate}], dimensions:[{name:'sessionDefaultChannelGroup'}], metrics:[{name:'sessions'},{name:'conversions'}] });
+        const gmap = {};
+        (chg?.rows||[]).forEach(r => { gmap[r.dimensionValues?.[0]?.value] = { sessions:+(r.metricValues?.[0]?.value||0), conversions:+(r.metricValues?.[1]?.value||0) }; });
+        window.stGa4ByChannel = gmap;
+      } catch(e) { console.warn('GA4 channel group:', e); }
 
       // Source/medium
       const src = await ga4Post({ dateRanges:[{startDate,endDate}], dimensions:[{name:'sessionSourceMedium'}], metrics:[{name:'sessions'},{name:'conversions'}], limit:20 });
@@ -1578,6 +1812,252 @@ async function loadData() {
     } catch (e) { console.error('ActiveCampaign:', e); }
   }
 
+  // ── ServiceTitan (either-or with HubSpot / ActiveCampaign) ──
+  if (servicetitan.connected && !hubspot.connected && !activecampaign.connected) {
+    try {
+      const stFetch = async (endpoint) => {
+        const r = await fetch('/api/servicetitan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ endpoint, method: 'GET' })
+        });
+        if (!r.ok) { console.warn('ServiceTitan fetch', endpoint, r.status); return null; }
+        return r.json();
+      };
+
+      // Paginate ServiceTitan list endpoints.
+      // Responses look like { data: [...], hasMore: bool, page, pageSize, totalCount }.
+      const stPaginate = async (basePath, { pageSize = 200, maxPages = 25 } = {}) => {
+        const all = [];
+        for (let p = 1; p <= maxPages; p++) {
+          const sep = basePath.includes('?') ? '&' : '?';
+          const data = await stFetch(`${basePath}${sep}page=${p}&pageSize=${pageSize}`);
+          if (!data) break;
+          const items = data.data || [];
+          items.forEach(x => all.push(x));
+          if (!data.hasMore || items.length === 0) break;
+        }
+        return all;
+      };
+
+      const startTs = new Date(startDate + 'T00:00:00').getTime();
+      const endTs   = new Date(endDate   + 'T23:59:59').getTime();
+      const isoStart = new Date(startDate + 'T00:00:00Z').toISOString();
+      const isoEnd   = new Date(endDate   + 'T23:59:59Z').toISOString();
+
+      // NOTE: the field names below (total, jobStatus, businessUnitId, campaignId,
+      // createdOn, completedOn, soldOn) follow ServiceTitan's documented JPM/Sales
+      // schema but SHOULD BE VERIFIED against your tenant's actual API responses.
+      // All reads are defensive — a missing/renamed field degrades to 0 or "—"
+      // rather than breaking the dashboard.
+      const jobTotal = j => parseFloat(j.total ?? j.jobValue ?? j.totalAmount ?? 0) || 0;
+      const jobStatusName = j => {
+        const s = j.jobStatus ?? j.status;
+        return (s && typeof s === 'object' ? (s.name || s.value) : s) || 'Unknown';
+      };
+
+      // ── PERFORMANCE: fetch every dataset in parallel (was sequential) ──
+      // All requests run concurrently instead of waiting in line; pageSize 500 = fewer round-trips.
+      const _jobsP  = stPaginate(`/jpm/v2/tenant/{tenant}/jobs?createdOnOrAfter=${encodeURIComponent(isoStart)}&createdBefore=${encodeURIComponent(isoEnd)}`, { pageSize: 500 }).catch(()=>[]);
+      const _custP  = stPaginate(`/crm/v2/tenant/{tenant}/customers?createdOnOrAfter=${encodeURIComponent(isoStart)}&createdBefore=${encodeURIComponent(isoEnd)}`, { pageSize: 500 }).catch(()=>[]);
+      const _buP    = stPaginate(`/settings/v2/tenant/{tenant}/business-units`, { pageSize: 500 }).catch(()=>[]);
+      const _estP   = stPaginate(`/sales/v2/tenant/{tenant}/estimates?createdOnOrAfter=${encodeURIComponent(isoStart)}&createdBefore=${encodeURIComponent(isoEnd)}`, { pageSize: 500 }).catch(()=>[]);
+      const _campP  = stPaginate(`/marketing/v2/tenant/{tenant}/campaigns`, { pageSize: 500, maxPages: 10 }).catch(()=>[]);
+      const _catP   = stPaginate(`/marketing/v2/tenant/{tenant}/categories`, { pageSize: 200, maxPages: 5 }).catch(()=>[]);
+      const _leadsP = stPaginate(`/crm/v2/tenant/{tenant}/leads?createdOnOrAfter=${encodeURIComponent(isoStart)}&createdBefore=${encodeURIComponent(isoEnd)}`, { pageSize: 500 }).catch(()=>[]);
+
+      // Jobs (→ mapped to HubSpot "deal" shape so existing renderers work unchanged)
+      const jobsRaw = await _jobsP;
+      const jobsInRange = jobsRaw.filter(j => {
+        const t = new Date(j.createdOn || j.createdOnUtc || 0).getTime();
+        return !t || (t >= startTs && t <= endTs);
+      });
+
+      const allDeals = jobsInRange.map(j => ({
+        properties: {
+          dealname: 'Job ' + (j.id || ''),
+          amount: String(jobTotal(j)),
+          dealstage: jobStatusName(j),
+          createdate: j.createdOn || null,
+          closedate: j.completedOn || null,
+          hs_is_closed_won: /complete/i.test(jobStatusName(j)) ? 'true' : 'false',
+        }
+      }));
+
+      deals = allDeals.length;
+      const pipeline = allDeals.reduce((t, d) => t + parseFloat(d.properties.amount || 0), 0);
+      const avgDeal = deals ? pipeline / deals : 0;
+      dd.deals = deals; dd.pipeline = pipeline; dd.avgDeal = avgDeal; dd.stageLabels = {};
+      setKPI('pipeline', fmtCurrency(pipeline));
+      setKPI('deals',    fmtN(deals));
+      setKPI('avg-deal', fmtCurrency(avgDeal));
+
+      // Customers → contacts (leads count)
+      const customersRaw = await _custP;
+      const allContacts = customersRaw.map(c => ({
+        properties: {
+          createdate: c.createdOn || null,
+          lifecyclestage: '',
+          hs_analytics_source: '(servicetitan)',
+          hs_lead_status: '',
+        }
+      }));
+      leads = allContacts.length;
+      qualified = 0;
+      dd.leads = leads; dd.qualified = qualified;
+      setKPI('ql',      '—');
+      setKPI('v2l',     sessions > 0 ? fmtPct(leads / sessions) : '—');
+      setKPI('l2ql',    '—');
+      setKPI('ql2deal', qualified > 0 ? fmtPct(deals / qualified) : '—');
+      setKPI('blog-leads', leads ? fmtN(Math.round(leads * 0.28)) : '—');
+
+      renderLifecycleViz(allContacts, allDeals);
+      renderContactSourceTable(allContacts);
+      renderDealStageChart(allDeals, {});
+      renderFunnel(sessions, leads, qualified, deals);
+      renderLeakage(leads, qualified, deals);
+
+      // Email tiles: not available for ServiceTitan
+      ['em-sent','em-open','em-click','em-ctr'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='n/a'; });
+      // Marketing-performance tiles: only new leads is meaningful for ServiceTitan
+      { const el=document.getElementById('mkt-leads'); if(el) el.textContent = leads>0?fmtN(leads):'—'; }
+      ['mkt-winrate','mkt-cycle','mkt-campaigns'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='—'; });
+
+      // ── ServiceTitan-native metrics ──
+      // Jobs completed + avg job value + total revenue
+      const completedJobs = jobsInRange.filter(j => /complete/i.test(jobStatusName(j)));
+      // Revenue = earned (completed jobs only); pipeline (all statuses) stays in the Deal Stage chart
+      const completedRev = completedJobs.reduce((t, j) => t + jobTotal(j), 0);
+      const avgCompleted = completedJobs.length ? completedRev / completedJobs.length : 0;
+      { const el=document.getElementById('st-jobs');    if(el) el.textContent = fmtN(completedJobs.length); }
+      { const el=document.getElementById('st-avgjob');  if(el) el.textContent = completedJobs.length ? fmtCurrency(avgCompleted) : '—'; }
+      { const el=document.getElementById('st-revenue'); if(el) el.textContent = fmtCurrency(completedRev); }
+
+      // Executive Overview top-line KPIs
+      { const el=document.getElementById('kv-st-leads');  if(el) el.textContent = fmtN(leads); }
+      { const el=document.getElementById('kv-st-booked'); if(el) el.textContent = fmtN(deals); }
+      { const el=document.getElementById('kv-st-sales');  if(el) el.textContent = fmtN(completedJobs.length); }
+      { const el=document.getElementById('kv-st-rev');    if(el) el.textContent = fmtCurrency(completedRev); }
+
+      // Estimate → sold conversion rate
+      try {
+        const estRaw = await _estP;
+        const isSold = e => {
+          if (e.soldOn) return true;
+          const s = e.status && typeof e.status === 'object' ? (e.status.name || e.status.value) : e.status;
+          return /sold/i.test(String(s || ''));
+        };
+        const sold = estRaw.filter(isSold).length;
+        const el = document.getElementById('st-estconv');
+        if (el) el.textContent = estRaw.length ? fmtPct(sold / estRaw.length) : '—';
+      } catch(e) { console.warn('ST estimates:', e); }
+
+      // Revenue by business unit
+      try {
+        const buRaw = await _buP;
+        const buNames = {};
+        buRaw.forEach(b => { buNames[b.id] = b.name || ('Unit ' + b.id); });
+        window.stBuNames = buNames;
+        const byBu = {};
+        jobsInRange.forEach(j => {
+          if (!/complete/i.test(jobStatusName(j))) return; // revenue by BU = completed jobs only
+          const id = j.businessUnitId ?? 'unknown';
+          if (!byBu[id]) byBu[id] = { jobs: 0, rev: 0 };
+          byBu[id].jobs += 1; byBu[id].rev += jobTotal(j);
+        });
+        const rows = Object.entries(byBu).sort((a,b)=>b[1].rev-a[1].rev);
+        const tb = document.getElementById('st-bu-tbody');
+        if (tb) tb.innerHTML = rows.length
+          ? rows.map(([id,v]) => `<tr><td>${buNames[id] || ('Unit '+id)}</td><td>${fmtN(v.jobs)}</td><td>${fmtCurrency(v.rev)}</td></tr>`).join('')
+          : '<tr><td colspan="3" class="empty">No data</td></tr>';
+      } catch(e) { console.warn('ST business units:', e); }
+
+      // ── Channel Breakdown (jobs grouped by campaign category → channel) ──
+      try {
+        // Confirmed mapping of HomeFirst's ServiceTitan campaign categories → channels.
+        // Keys are lowercased category names; anything unmapped falls into "Other".
+        const ST_CHANNEL_MAP = {
+          'googlepaid':'Google Paid', 'ppc':'Google Paid',
+          'seo':'Google Organic', 'googlemybusiness':'Google Organic',
+          'search':'Search',
+          'paid digital media':'Paid Digital',
+          'social media':'Social',
+          'sms':'SMS',
+          'email marketing':'Mass eDM',
+          'direct mail':'Direct Mail', 'mass mailouts':'Direct Mail',
+          'print advertising':'Print',
+          'direct web traffic':'Direct/Web', 'online':'Direct/Web',
+          'yellow pages':'Yellow Pages',
+          'customer referral':'Referral', 'referral':'Referral', 'lead aggregator/referral':'Referral',
+        };
+        const ST_CHANNEL_ORDER = ['Google Paid','Google Organic','Search','Paid Digital','Social','SMS','Mass eDM','Direct Mail','Print','Direct/Web','Yellow Pages','Referral','Other'];
+
+        // Resolve each job's campaign → category → channel.
+        // NOTE: the campaign "category" field/endpoint SHOULD BE VERIFIED against the live API at go-live.
+        const campaigns = await _campP;
+        let categories = [];
+        try { categories = await _catP; } catch(e) {}
+        const catName = {};
+        categories.forEach(c => { catName[c.id] = c.name || String(c.id); });
+        const campaignChannel = {};
+        campaigns.forEach(c => {
+          let cat = c.category;
+          if (cat && typeof cat === 'object') cat = cat.name || cat.value;
+          if (!cat && c.categoryName) cat = c.categoryName;
+          if (!cat && (c.categoryId != null)) cat = catName[c.categoryId];
+          campaignChannel[c.id] = ST_CHANNEL_MAP[String(cat || '').trim().toLowerCase()] || 'Other';
+        });
+
+        const byChan = {};
+        const jobsByChan = {};
+        ST_CHANNEL_ORDER.forEach(ch => { byChan[ch] = { booked: 0, sales: 0, rev: 0 }; });
+        jobsInRange.forEach(j => {
+          const ch = campaignChannel[j.campaignId] || 'Other';
+          if (!byChan[ch]) byChan[ch] = { booked: 0, sales: 0, rev: 0 };
+          const status = jobStatusName(j);
+          byChan[ch].booked += 1;
+          if (/complete/i.test(status)) { byChan[ch].sales += 1; byChan[ch].rev += jobTotal(j); } // revenue = completed only
+          // Per-job detail row (fields read defensively — verify names against live API)
+          (jobsByChan[ch] = jobsByChan[ch] || []).push({
+            label: j.number ?? j.jobNumber ?? ('Job ' + (j.id || '')),
+            created: j.createdOn || j.createdOnUtc || '',
+            status: status,
+            completed: j.completedOn || '',
+            bu: (window.stBuNames && window.stBuNames[j.businessUnitId]) || (j.businessUnitId != null ? ('Unit ' + j.businessUnitId) : '—'),
+            value: jobTotal(j),
+          });
+        });
+
+        // Store per-channel aggregates + job lists, and build one tab per channel that has data
+        window.stChannelData = byChan;
+        window.stChannelJobs = jobsByChan;
+        const channelsWithData = ST_CHANNEL_ORDER.filter(ch => byChan[ch] && (byChan[ch].booked || byChan[ch].rev));
+        buildChannelTabs(channelsWithData);
+        renderChannelChart(byChan);
+
+        // Leads by channel — ServiceTitan CRM leads carry a campaignId, so we group
+        // them into channels the same way as jobs. (Send/open stats are a separate feed.)
+        window.stMarketing = window.stMarketing || {};
+        try {
+          const leadsRaw = await _leadsP;
+          const leadsByChan = {};
+          leadsRaw.forEach(l => {
+            const t = new Date(l.createdOn || 0).getTime();
+            if (t && (t < startTs || t > endTs)) return;
+            const ch = campaignChannel[l.campaignId] || 'Other';
+            leadsByChan[ch] = (leadsByChan[ch] || 0) + 1;
+          });
+          window.stLeadsByChannel = leadsByChan;
+          window.stChannelLeads = leadsByChan;
+          const totalLeads = Object.values(leadsByChan).reduce((a, b) => a + b, 0);
+          const el = document.getElementById('kv-st-leads'); if (el) el.textContent = fmtN(totalLeads);
+        } catch (e) { console.warn('ST leads:', e); window.stLeadsByChannel = window.stLeadsByChannel || {}; }
+        renderLeadsChart();
+      } catch(e) { console.warn('ST channel breakdown:', e); }
+
+    } catch (e) { console.error('ServiceTitan:', e); }
+  }
+
   // ── Guaranteed fallbacks — always render even if individual blocks failed ──
   try { renderSourceTable(dd.sourceRows||[], sessions); } catch(e) { console.warn('renderSourceTable:', e); }
   try { renderStageTiming(); } catch(e) {}
@@ -1681,6 +2161,139 @@ function renderDealStageChart(allDeals, stageLabels={}) {
       ctx.font = '500 11px Plus Jakarta Sans, sans-serif';
       ctx.fillText(fmtCurrency(val), pad.l+bw+8, by+bh/2+4);
     }
+  });
+}
+
+function renderChannelChart(byChan) {
+  const canvas = document.getElementById('st-channel-chart');
+  if (!canvas) return;
+  const entries = Object.entries(byChan || {})
+    .filter(([, v]) => v && v.booked)
+    .sort((a, b) => b[1].booked - a[1].booked);
+  if (!entries.length) { canvas.style.display = 'none'; return; }
+  canvas.style.display = '';
+  const W = canvas.offsetWidth || 600, H = Math.max(180, entries.length * 40 + 24);
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(devicePixelRatio, devicePixelRatio);
+  const pad = { t: 8, r: 16, b: 8, l: 130 };
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const rowH = ch / entries.length;
+  const maxV = Math.max(...entries.map(e => e[1].booked), 1);
+  entries.forEach(([name, v], i) => {
+    const y = pad.t + i * rowH;
+    const bw = Math.max(4, Math.round(v.booked / maxV * cw));
+    const bh = Math.min(rowH - 10, 28);
+    const by = y + (rowH - bh) / 2;
+    ctx.fillStyle = '#EEEEFF'; ctx.beginPath(); ctx.roundRect(pad.l, by, cw, bh, 4); ctx.fill();
+    ctx.fillStyle = '#533AFD'; ctx.beginPath(); ctx.roundRect(pad.l, by, bw, bh, 4); ctx.fill();
+    ctx.fillStyle = '#50617A'; ctx.font = '600 11px Plus Jakarta Sans, sans-serif'; ctx.textAlign = 'right';
+    const lbl = name.length > 18 ? name.slice(0, 17) + '…' : name;
+    ctx.fillText(lbl, pad.l - 10, by + bh / 2 + 4);
+    ctx.textAlign = 'left';
+    if (bw > 40) { ctx.fillStyle = '#fff'; ctx.font = '500 11px Plus Jakarta Sans, sans-serif'; ctx.fillText(fmtN(v.booked), pad.l + 10, by + bh / 2 + 4); }
+    else { ctx.fillStyle = '#273951'; ctx.font = '500 11px Plus Jakarta Sans, sans-serif'; ctx.fillText(fmtN(v.booked), pad.l + bw + 8, by + bh / 2 + 4); }
+  });
+}
+
+// ── Per-channel Delivery & Engagement config ──
+// bm = benchmark display string; source 'external' = the platform is not ServiceTitan;
+// notTracked = ServiceTitan does not track this metric for this channel.
+// source 'servicetitan' = ServiceTitan Marketing; rows flagged ga4:true fall back to GA4
+// when ServiceTitan doesn't track them; rows with neither are ad-platform-only.
+// ga4Group = the GA4 default channel group(s) that map to this channel.
+const ST_ENGAGEMENT = {
+  'Mass eDM':      { source: 'servicetitan', label: 'ServiceTitan email analytics', rows: [
+    { k: 'sent', label: 'Emails sent' }, { k: 'delivered', label: 'Delivered' },
+    { k: 'deliveryRate', label: 'Delivery rate', bm: '99%' }, { k: 'openRate', label: 'Open rate', bm: '26.9%' },
+    { k: 'clickRate', label: 'Click rate', bm: '1.84%' } ] },
+  'SMS':           { source: 'servicetitan', label: 'ServiceTitan SMS analytics', rows: [
+    { k: 'sent', label: 'Messages sent' }, { k: 'delivered', label: 'Delivered' },
+    { k: 'deliveryRate', label: 'Delivery rate', bm: '~99%' }, { k: 'clickRate', label: 'Click rate', bm: '~19%' },
+    { k: 'optOuts', label: 'Opt-outs' }, { k: 'openRate', label: 'Open rate', notTracked: true } ] },
+  'Direct Mail':   { source: 'servicetitan', label: 'Physical mail', rows: [
+    { k: 'sent', label: 'Pieces mailed' }, { k: 'responseRate', label: 'Response rate', bm: '3–5%' },
+    { k: 'openClick', label: 'Open / click', notTracked: true } ] },
+  'Print':         { source: 'servicetitan', label: 'Physical print', rows: [
+    { k: 'sent', label: 'Pieces run' }, { k: 'responseRate', label: 'Response rate', bm: '3–5%' },
+    { k: 'openClick', label: 'Open / click', notTracked: true } ] },
+  'Google Paid':   { source: 'external', ga4Group: ['Paid Search'], rows: [
+    { k: 'sessions', label: 'Sessions', ga4: true }, { k: 'conversions', label: 'Conversions', ga4: true },
+    { k: 'ctr', label: 'CTR', bm: '6.37%' }, { k: 'cpc', label: 'CPC', bm: '$7.85' }, { k: 'spend', label: 'Spend' } ] },
+  'Paid Digital':  { source: 'external', ga4Group: ['Display', 'Paid Other', 'Paid Shopping'], rows: [
+    { k: 'sessions', label: 'Sessions', ga4: true }, { k: 'conversions', label: 'Conversions', ga4: true },
+    { k: 'spend', label: 'Spend' } ] },
+  'Social':        { source: 'external', ga4Group: ['Organic Social', 'Paid Social'], rows: [
+    { k: 'sessions', label: 'Sessions', ga4: true }, { k: 'conversions', label: 'Conversions', ga4: true },
+    { k: 'ctr', label: 'CTR', bm: '1.4–2.2%' }, { k: 'cpl', label: 'Cost / lead', bm: '$27.66' } ] },
+  'Google Organic': { source: 'external', ga4Group: ['Organic Search'], rows: [
+    { k: 'sessions', label: 'Sessions', ga4: true }, { k: 'conversions', label: 'Conversions', ga4: true }, { k: 'convRate', label: 'Conversion rate', ga4: true, bm: '~7.8%' } ] },
+  'SEO':           { source: 'external', ga4Group: ['Organic Search'], rows: [
+    { k: 'sessions', label: 'Sessions', ga4: true }, { k: 'conversions', label: 'Conversions', ga4: true }, { k: 'convRate', label: 'Conversion rate', ga4: true, bm: '~7.8%' } ] },
+  'Search':        { source: 'external', ga4Group: ['Organic Search', 'Paid Search'], rows: [
+    { k: 'sessions', label: 'Sessions', ga4: true }, { k: 'conversions', label: 'Conversions', ga4: true }, { k: 'convRate', label: 'Conversion rate', ga4: true, bm: '~7.8%' } ] },
+  'Direct/Web':    { source: 'external', ga4Group: ['Direct'], rows: [
+    { k: 'sessions', label: 'Sessions', ga4: true }, { k: 'conversions', label: 'Conversions', ga4: true }, { k: 'convRate', label: 'Conversion rate', ga4: true, bm: '~7.8%' } ] },
+};
+
+function renderChannelEngagement(channel) {
+  const card = document.getElementById('st-channel-engagement-card');
+  if (!card) return;
+  const cfg = ST_ENGAGEMENT[channel];
+  if (!cfg) { card.style.display = 'none'; return; } // Referral / Yellow Pages / Other — no sends/engagement
+  card.style.display = '';
+  const ga4On = !!(dashboardStatus && dashboardStatus.ga4 && dashboardStatus.ga4.connected && dashboardStatus.ga4.propertySet);
+  const sub = document.getElementById('st-channel-engagement-sub');
+  if (sub) sub.textContent = cfg.source === 'external'
+    ? ('Not tracked in CRM — website metrics from GA4' + (ga4On ? '' : ' (GA4 not connected)'))
+    : (cfg.label || '');
+  const stStats = (window.stMarketing && window.stMarketing[channel]) || {};
+  // Sum the GA4 channel groups that map to this channel
+  const g = { sessions: 0, conversions: 0, has: false };
+  if (cfg.ga4Group && window.stGa4ByChannel) {
+    cfg.ga4Group.forEach(name => {
+      const d = window.stGa4ByChannel[name];
+      if (d) { g.sessions += (d.sessions || 0); g.conversions += (d.conversions || 0); g.has = true; }
+    });
+  }
+  const tb = document.getElementById('st-channel-engagement-tbody');
+  if (!tb) return;
+  tb.innerHTML = cfg.rows.map(r => {
+    let actual;
+    if (r.notTracked) actual = 'Not tracked in CRM or GA4';
+    else if (cfg.source === 'servicetitan') actual = (stStats[r.k] != null) ? stStats[r.k] : '—';
+    else if (r.ga4) { // CRM doesn't track it → try GA4
+      if (!ga4On) actual = 'Connect GA4 to show';
+      else if (r.k === 'sessions') actual = g.has ? fmtN(g.sessions) : '—';
+      else if (r.k === 'conversions') actual = g.has ? fmtN(g.conversions) : '—';
+      else if (r.k === 'convRate') actual = (g.has && g.sessions) ? fmtPct(g.conversions / g.sessions) : '—';
+      else actual = '—';
+    } else actual = 'Not tracked in CRM or GA4'; // ad-platform-only (impressions, CTR, CPC, spend)
+    return `<tr><td>${r.label}</td><td>${actual}</td><td>${r.bm || '—'}</td></tr>`;
+  }).join('');
+}
+
+function renderLeadsChart() {
+  const canvas = document.getElementById('st-leads-chart');
+  const note = document.getElementById('st-leads-note');
+  const data = window.stLeadsByChannel || {};
+  const entries = Object.entries(data).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) { if (canvas) canvas.style.display = 'none'; if (note) note.style.display = 'block'; return; }
+  if (note) note.style.display = 'none'; if (canvas) canvas.style.display = '';
+  const W = canvas.offsetWidth || 600, H = Math.max(180, entries.length * 40 + 24);
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(devicePixelRatio, devicePixelRatio);
+  const pad = { t: 8, r: 16, b: 8, l: 130 }, cw = W - pad.l - pad.r, ch = H - pad.t - pad.b, rowH = ch / entries.length;
+  const maxV = Math.max(...entries.map(e => e[1]), 1);
+  entries.forEach(([name, n], i) => {
+    const y = pad.t + i * rowH, bw = Math.max(4, Math.round(n / maxV * cw)), bh = Math.min(rowH - 10, 28), by = y + (rowH - bh) / 2;
+    ctx.fillStyle = '#EEEEFF'; ctx.beginPath(); ctx.roundRect(pad.l, by, cw, bh, 4); ctx.fill();
+    ctx.fillStyle = '#533AFD'; ctx.beginPath(); ctx.roundRect(pad.l, by, bw, bh, 4); ctx.fill();
+    ctx.fillStyle = '#50617A'; ctx.font = '600 11px Plus Jakarta Sans, sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(name.length > 18 ? name.slice(0, 17) + '…' : name, pad.l - 10, by + bh / 2 + 4);
+    ctx.textAlign = 'left'; ctx.fillStyle = bw > 40 ? '#fff' : '#273951'; ctx.font = '500 11px Plus Jakarta Sans, sans-serif';
+    ctx.fillText(fmtN(n), bw > 40 ? pad.l + 10 : pad.l + bw + 8, by + bh / 2 + 4);
   });
 }
 
