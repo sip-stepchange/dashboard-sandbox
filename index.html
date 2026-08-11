@@ -626,15 +626,15 @@
         <div class="kpi-card"><div class="kpi-label">Total Rev</div><div class="kpi-value" id="kv-st-rev">—</div><div class="kpi-sub">Completed job revenue</div></div>
       </div>
 
-      <!-- Jobs by Channel chart (Executive Overview, ServiceTitan clients only) -->
+      <!-- Jobs/Deals by Channel chart (Executive Overview, all CRMs — label is set per CRM) -->
       <div class="sec-block" data-section="channel-chart" id="st-channel-chart-section" style="display:none">
-        <div class="section-lbl gap-m">Jobs by Channel</div>
+        <div class="section-lbl gap-m" id="lbl-channel-chart">Jobs by Channel</div>
         <div class="card">
           <div class="card-body"><canvas id="st-channel-chart" style="width:100%;height:280px"></canvas></div>
         </div>
       </div>
 
-      <!-- Leads by Channel chart (Executive Overview, ServiceTitan clients only) -->
+      <!-- Leads by Channel chart (Executive Overview, all CRMs) -->
       <div class="sec-block" data-section="leads-chart" id="st-leads-chart-section" style="display:none">
         <div class="section-lbl gap-m">Leads by Channel</div>
         <div class="card">
@@ -811,15 +811,38 @@
         </div>
       </div><!-- /sec-block servicetitan-metrics -->
 
-      <!-- Per-channel detail (one channel tab at a time — ServiceTitan clients only) -->
+      <!-- Per-channel detail (one channel tab at a time — all CRMs) -->
       <div class="sec-block" data-section="channel-detail" id="st-channel-section" style="position:relative;display:none">
         <div class="section-lbl gap-t" id="st-channel-title">Channel</div>
         <div class="kpi-grid">
           <div class="kpi-card"><div class="kpi-label">Leads</div><div class="kpi-value" id="kv-ch-leads">—</div><div class="kpi-sub">Leads attributed to this channel</div></div>
-          <div class="kpi-card"><div class="kpi-label">Booked Jobs</div><div class="kpi-value" id="kv-ch-booked">—</div><div class="kpi-sub">Jobs from this channel</div></div>
-          <div class="kpi-card"><div class="kpi-label">Total Sales</div><div class="kpi-value" id="kv-ch-sales">—</div><div class="kpi-sub">Jobs sold / completed</div></div>
+          <div class="kpi-card"><div class="kpi-label" id="kl-ch-booked">Booked Jobs</div><div class="kpi-value" id="kv-ch-booked">—</div><div class="kpi-sub" id="ks-ch-booked">Jobs from this channel</div></div>
+          <div class="kpi-card"><div class="kpi-label" id="kl-ch-sales">Total Sales</div><div class="kpi-value" id="kv-ch-sales">—</div><div class="kpi-sub" id="ks-ch-sales">Jobs sold / completed</div></div>
           <div class="kpi-card"><div class="kpi-label">Total Rev</div><div class="kpi-value" id="kv-ch-rev">—</div><div class="kpi-sub">Revenue from this channel</div></div>
         </div>
+
+        <!-- Subscription cost — manual entry only. No ad or CRM platform exposes the
+             client's own billing/subscription price through its reporting API. -->
+        <div class="card gap-t" id="ch-subscription-card">
+          <div class="card-header">
+            <div><div class="card-title">Subscription cost</div>
+            <div class="card-sub">Requires manual input due to data security restrictions</div></div>
+            <div id="ch-subscription-value" style="font-size:20px;font-weight:700;color:var(--navy)">—</div>
+          </div>
+          <div class="card-body" id="ch-subscription-body" style="padding-top:0"></div>
+        </div>
+
+        <!-- Campaigns running through this channel -->
+        <div class="card gap-t" id="ch-campaigns-card">
+          <div class="card-header"><div class="card-title">Campaigns running</div><div class="card-sub" id="ch-campaigns-sub"></div></div>
+          <div class="tbl-wrap">
+            <table id="ch-campaigns-table">
+              <thead><tr><th>Campaign</th><th>Status</th><th>Leads</th><th>Clicks</th><th>Impressions</th><th>Spend</th></tr></thead>
+              <tbody id="ch-campaigns-tbody"><tr><td colspan="6" class="empty">—</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="card gap-t" id="st-channel-engagement-card" style="display:none">
           <div class="card-header"><div class="card-title">Delivery &amp; Engagement</div><div class="card-sub" id="st-channel-engagement-sub"></div></div>
           <div class="tbl-wrap">
@@ -827,14 +850,16 @@
             <tbody id="st-channel-engagement-tbody"></tbody></table>
           </div>
         </div>
-        <div class="card gap-t">
+        <!-- Business-unit + job-list cards are ServiceTitan-only (ServiceTitan is the
+             only connected CRM with a business-unit concept and a job object). -->
+        <div class="card gap-t" id="ch-bu-card">
           <div class="card-header"><div class="card-title">Revenue by Business Unit</div><div class="card-sub">This channel</div></div>
           <div class="tbl-wrap">
             <table><thead><tr><th>Business Unit</th><th>Jobs</th><th>Revenue</th></tr></thead>
             <tbody id="st-channel-bu-tbody"><tr><td colspan="3" class="empty">—</td></tr></tbody></table>
           </div>
         </div>
-        <div class="card gap-t">
+        <div class="card gap-t" id="ch-jobs-card">
           <div class="card-header"><div class="card-title">Jobs in this channel</div><div class="card-sub">Most recent first</div></div>
           <div class="tbl-wrap">
             <table id="st-channel-jobs-table">
@@ -844,6 +869,33 @@
           </div>
         </div>
       </div><!-- /sec-block channel-detail -->
+
+      <!-- ══ SOCIAL CHANNEL ══
+           Always present, for every client, regardless of which CRM or social
+           accounts are connected — the same way Executive Overview is always
+           present. Each platform block renders its own connect / not-tracked
+           state rather than disappearing, so the client can see what is missing. -->
+      <div class="sec-block" data-section="social" id="social-section" style="position:relative;display:none">
+        <div class="section-lbl gap-t">Social</div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Leads</div><div class="kpi-value" id="kv-soc-leads">—</div><div class="kpi-sub">Across all social platforms</div></div>
+          <div class="kpi-card"><div class="kpi-label">Clicks</div><div class="kpi-value" id="kv-soc-clicks">—</div><div class="kpi-sub">Across all social platforms</div></div>
+          <div class="kpi-card"><div class="kpi-label">Impressions</div><div class="kpi-value" id="kv-soc-impr">—</div><div class="kpi-sub">Across all social platforms</div></div>
+          <div class="kpi-card"><div class="kpi-label">Spend</div><div class="kpi-value" id="kv-soc-spend">—</div><div class="kpi-sub">Paid social only</div></div>
+        </div>
+
+        <div class="card gap-t" id="soc-subscription-card">
+          <div class="card-header">
+            <div><div class="card-title">Subscription cost</div>
+            <div class="card-sub">Requires manual input due to data security restrictions</div></div>
+            <div id="soc-subscription-value" style="font-size:20px;font-weight:700;color:var(--navy)">—</div>
+          </div>
+          <div class="card-body" id="soc-subscription-body" style="padding-top:0"></div>
+        </div>
+
+        <!-- One block per connected-or-not social platform, built by renderSocialTab() -->
+        <div id="social-platforms"></div>
+      </div><!-- /sec-block social -->
 
       <!-- Section D: GA4 data -->
       <div class="section-lbl gap-m" data-source="ga4">GA4</div>
@@ -1087,6 +1139,10 @@ async function initDashboard() {
     if (pr.ok) { const p = await pr.json(); applyPrefs(p); }
   } catch(e) { console.warn('Could not load cloud prefs, using local:', e); }
 
+  // Manual channel config (subscription costs, recorded campaigns, Sales Navigator).
+  // Loaded before the first render so the Social tab and channel tabs can show it.
+  await loadChannelConfig();
+
   showDashboard();
   renderConnStatus();
   loadData();
@@ -1141,19 +1197,26 @@ function renderConnStatus() {
   const emailNote = document.getElementById('email-unavailable-note');
   if (emailNote) emailNote.style.display = servicetitan.connected ? 'block' : 'none';
 
-  applyServiceTitanLayout();
+  applyChannelLayout();
 }
 
-// ── ServiceTitan tabbed layout ──
-// When ServiceTitan is the connected CRM, the dashboard splits into two tabs
-// (ServiceTitan / GA4) and the sales-CRM-only sections are hidden. HubSpot and
-// ActiveCampaign clients are completely unaffected.
+// ── Tabbed channel layout (all CRMs) ──
+// Executive Overview plus one tab per channel that has data, plus an always-on
+// Social tab. Originally ServiceTitan-only; now runs for HubSpot and
+// ActiveCampaign too.
+//
+// The one deliberate difference between CRMs: ServiceTitan REPLACES the
+// sales-CRM sections (lifecycle, funnel, email) with its own KPI row, because
+// those sections are HubSpot concepts that ServiceTitan has no equivalent for.
+// HubSpot and ActiveCampaign KEEP every section they render today and simply
+// gain the tab bar on top, so no existing dashboard loses functionality.
 let stView = 'overview';
 
-function applyServiceTitanLayout() {
+function applyChannelLayout() {
   const isST = !!(dashboardStatus && dashboardStatus.servicetitan && dashboardStatus.servicetitan.connected);
+  const anyCrm = !!activeCrm();
   const tabbar = document.getElementById('st-tabbar');
-  // Sales-CRM sections + the shared KPI row that ServiceTitan replaces with its own
+  // Sections ServiceTitan replaces. Left untouched for every other CRM.
   const removeForST = [
     document.querySelector('[data-section="lifecycle"]'),
     document.getElementById('lbl-outcomes'),
@@ -1164,34 +1227,57 @@ function applyServiceTitanLayout() {
   ];
   const gridST = document.getElementById('grid-st-overview');
   const channelSec = document.getElementById('st-channel-section');
+  const socialSec = document.getElementById('social-section');
   const chartSec = document.getElementById('st-channel-chart-section');
   const leadsSec = document.getElementById('st-leads-chart-section');
   const filterBtns = [document.getElementById('filter-hs-btn'), document.getElementById('filter-ga4-btn')];
 
-  if (!isST) {
+  if (!anyCrm) {
     if (tabbar) tabbar.style.display = 'none';
     removeForST.forEach(el => { if (el) el.style.display = ''; });
     if (gridST) gridST.style.display = 'none';
     if (channelSec) channelSec.style.display = 'none';
+    if (socialSec) socialSec.style.display = 'none';
     if (chartSec) chartSec.style.display = 'none';
     if (leadsSec) leadsSec.style.display = 'none';
     filterBtns.forEach(b => { if (b) b.style.display = ''; });
     return;
   }
 
-  // ServiceTitan client: show tabs, hide the sales-CRM sections + old source filter
   if (tabbar) tabbar.style.display = 'flex';
-  removeForST.forEach(el => { if (el) el.style.display = 'none'; });
-  filterBtns.forEach(b => { if (b) b.style.display = 'none'; });
+
+  // ServiceTitan groups by job; the sales CRMs group by deal.
+  const chartLbl = document.getElementById('lbl-channel-chart');
+  if (chartLbl) chartLbl.textContent = isST ? 'Jobs by Channel' : 'Deals by Channel';
+
+  // Guarantee the Social tab exists even before (or without) any channel data,
+  // so it behaves like Executive Overview and is always reachable.
+  if (!tabbar.querySelector('.st-tab[data-channel]')) buildChannelTabs([]);
+
+  if (isST) {
+    // ServiceTitan: as before — its own KPI row replaces the sales-CRM sections.
+    removeForST.forEach(el => { if (el) el.style.display = 'none'; });
+    filterBtns.forEach(b => { if (b) b.style.display = 'none'; });
+  } else {
+    // HubSpot / ActiveCampaign: keep everything they already render.
+    removeForST.forEach(el => { if (el) el.style.display = ''; });
+    if (gridST) gridST.style.display = 'none';
+    filterBtns.forEach(b => { if (b) b.style.display = ''; });
+  }
   setStView(stView || 'overview');
 }
+// Kept so any existing call site (or bookmarklet) still works.
+const applyServiceTitanLayout = applyChannelLayout;
 
-// Build one tab per channel that has data (called after loadData aggregates channels)
+// Build one tab per channel that has data, then always append Social.
+// Social is appended unconditionally — like Executive Overview — so a client can
+// always see which social platforms are and are not connected.
 function buildChannelTabs(channelNames) {
   const bar = document.getElementById('st-tabbar');
   if (!bar) return;
   bar.querySelectorAll('.st-tab[data-channel]').forEach(t => t.remove());
-  channelNames.forEach(name => {
+  const names = (channelNames || []).filter(n => n !== 'Social').concat(['Social']);
+  names.forEach(name => {
     const btn = document.createElement('button');
     btn.className = 'st-tab';
     btn.type = 'button';
@@ -1202,14 +1288,19 @@ function buildChannelTabs(channelNames) {
     bar.appendChild(btn);
   });
   // If the previously-selected channel no longer has data, fall back to overview
-  if (stView !== 'overview' && !channelNames.includes(stView)) stView = 'overview';
+  if (stView !== 'overview' && !names.includes(stView)) stView = 'overview';
   setStView(stView);
 }
 
 function setStView(v) {
   stView = v;
   const isOverview = (v === 'overview');
-  // Executive Overview = everything collated; a channel tab = just the channel detail panel
+  const isSocial   = (v === 'Social');
+  const isST = !!(dashboardStatus && dashboardStatus.servicetitan && dashboardStatus.servicetitan.connected);
+
+  // On a ServiceTitan client the Executive Overview owns the collated sections and
+  // a channel tab shows only that channel. On HubSpot / ActiveCampaign the same
+  // rule applies, so their existing sections stay exactly as they are on Overview.
   const overviewEls = [
     document.getElementById('grid-st-overview'),
     document.getElementById('st-channel-chart-section'),
@@ -1220,11 +1311,39 @@ function setStView(v) {
     document.querySelector('[data-section="email"]'),
     document.getElementById('st-metrics-section'),
     document.querySelector('.section-lbl[data-source="ga4"]'),
+    document.querySelector('[data-section="lifecycle"]'),
+    document.getElementById('lbl-outcomes'),
+    document.getElementById('grid-a'),
+    document.getElementById('lbl-funnel'),
+    document.getElementById('grid-b'),
+    document.querySelector('[data-section="email-perf"]'),
   ];
   document.querySelectorAll('.sec-block[data-source="ga4"]').forEach(el => overviewEls.push(el));
   const channelSec = document.getElementById('st-channel-section');
-  overviewEls.forEach(el => { if (el) el.style.display = isOverview ? '' : 'none'; });
-  if (channelSec) channelSec.style.display = isOverview ? 'none' : '';
+  const socialSec  = document.getElementById('social-section');
+
+  overviewEls.forEach(el => {
+    if (!el) return;
+    if (!isOverview) { el.style.display = 'none'; return; }
+    // Back on Overview: honour the per-CRM rule about which sections exist at all.
+    const isSalesCrmSection = [
+      document.querySelector('[data-section="lifecycle"]'),
+      document.getElementById('lbl-outcomes'),
+      document.getElementById('grid-a'),
+      document.getElementById('lbl-funnel'),
+      document.getElementById('grid-b'),
+      document.querySelector('[data-section="email-perf"]'),
+    ].includes(el);
+    const stOnly = (el.id === 'grid-st-overview' || el.id === 'st-metrics-section');
+    if (isST && isSalesCrmSection) el.style.display = 'none';
+    else if (!isST && stOnly)      el.style.display = 'none';
+    else                            el.style.display = '';
+  });
+
+  if (channelSec) channelSec.style.display = (isOverview || isSocial) ? 'none' : '';
+  if (socialSec)  socialSec.style.display  = isSocial ? '' : 'none';
+
+  if (isSocial) { renderSocialTab(); return; }
 
   if (!isOverview) {
     const d = (window.stChannelData && window.stChannelData[v]) || { booked: 0, sales: 0, rev: 0 };
@@ -1232,9 +1351,29 @@ function setStView(v) {
     set('st-channel-title', v);
     const chLeads = (window.stChannelLeads && window.stChannelLeads[v] != null) ? window.stChannelLeads[v] : null;
     set('kv-ch-leads', chLeads != null ? fmtN(chLeads) : '—');
-    set('kv-ch-booked', fmtN(d.booked));
-    set('kv-ch-sales', fmtN(d.sales));
-    set('kv-ch-rev', fmtCurrency(d.rev));
+
+    // KPI 2/3 mean different things per CRM: ServiceTitan counts jobs, the sales
+    // CRMs count deals. Relabel rather than showing a client the wrong noun.
+    set('kl-ch-booked', isST ? 'Booked Jobs' : 'Deals Created');
+    set('ks-ch-booked', isST ? 'Jobs from this channel' : 'Deals from this channel');
+    set('kl-ch-sales',  isST ? 'Total Sales' : 'Deals Won');
+    set('ks-ch-sales',  isST ? 'Jobs sold / completed' : 'Closed-won deals');
+
+    // On a sales CRM, deal figures depend on deal→contact associations. If none
+    // resolved, say so rather than presenting a real-looking zero.
+    const dealAttrOk = isST || (window.hsDealsAttributed > 0);
+    set('kv-ch-booked', dealAttrOk ? fmtN(d.booked) : msgNotTracked(crmDisplayName()));
+    set('kv-ch-sales',  dealAttrOk ? fmtN(d.sales)  : msgNotTracked(crmDisplayName()));
+    set('kv-ch-rev',    dealAttrOk ? fmtCurrency(d.rev) : msgNotTracked(crmDisplayName()));
+
+    // Business-unit and job tables only mean something for ServiceTitan.
+    const buCard = document.getElementById('ch-bu-card');
+    const jobsCard = document.getElementById('ch-jobs-card');
+    if (buCard) buCard.style.display = isST ? '' : 'none';
+    if (jobsCard) jobsCard.style.display = isST ? '' : 'none';
+
+    renderSubscriptionCard(v, 'ch-subscription-value', 'ch-subscription-body');
+    renderCampaignsCard(v);
 
     // Jobs list for this channel
     const jobs = (window.stChannelJobs && window.stChannelJobs[v]) || [];
@@ -1559,7 +1698,10 @@ async function loadData() {
       setKPI('avg-deal', fmtCurrency(avgDeal));
 
       // Contacts
-      const conData = await hsSearch('contacts', dateFilter, ['lifecyclestage','createdate','hs_analytics_source','hs_lead_status']);
+      // hs_analytics_source_data_1 is HubSpot's Traffic Source Drill-Down 1. For a
+      // Paid/Organic Social contact it carries the social platform name, which is
+      // what lets the Social tab split LinkedIn from Facebook from Instagram.
+      const conData = await hsSearch('contacts', dateFilter, ['lifecyclestage','createdate','hs_analytics_source','hs_analytics_source_data_1','hs_lead_status']);
       const allContacts = conData?.results || [];
       leads     = allContacts.length;
       qualified = allContacts.filter(c=>['marketingqualifiedlead','salesqualifiedlead','opportunity','customer'].includes(c.properties?.lifecyclestage)).length;
@@ -1577,6 +1719,51 @@ async function loadData() {
       renderDealStageChart(allDeals, stageLabels);
       renderFunnel(sessions, leads, qualified, deals);
       renderLeakage(leads, qualified, deals);
+
+      // ── Channel breakdown for HubSpot ──
+      // Leads by channel come straight off each contact's hs_analytics_source.
+      // Deals carry no source property of their own, so a deal is attributed via
+      // its associated contact. If the association read fails (or the private-app
+      // token lacks the scope) the deal figures degrade to an explicit
+      // "not tracked" rather than a misleading zero.
+      try {
+        let dealChannelById = null;
+        try {
+          const contactChannel = {};
+          allContacts.forEach(c => { contactChannel[c.id] = hsSourceToChannel(c.properties?.hs_analytics_source); });
+          const ids = allDeals.map(d => ({ id: d.id }));
+          const assocMap = {};
+          for (let i = 0; i < ids.length; i += 100) {
+            const batch = ids.slice(i, i + 100);
+            const ar = await fetch('/api/hubspot', {
+              method:'POST',
+              headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+              body: JSON.stringify({ endpoint:'/crm/v4/associations/deals/contacts/batch/read', method:'POST', body:{ inputs: batch } })
+            });
+            if (!ar.ok) throw new Error('associations HTTP ' + ar.status);
+            const aj = await ar.json();
+            (aj?.results || []).forEach(r => {
+              const dealId = r.from?.id ?? r._from?.id;
+              const first = (r.to || [])[0];
+              if (dealId && first) assocMap[dealId] = first.toObjectId ?? first.id;
+            });
+          }
+          dealChannelById = {};
+          allDeals.forEach(d => {
+            const cid = assocMap[d.id];
+            if (cid && contactChannel[cid]) dealChannelById[d.id] = contactChannel[cid];
+          });
+          if (!Object.keys(dealChannelById).length) dealChannelById = null;
+        } catch (e) {
+          console.warn('HubSpot deal→contact associations unavailable:', e && e.message);
+          dealChannelById = null;
+        }
+
+        const names = buildHubSpotChannels(allContacts, allDeals, dealChannelById);
+        buildChannelTabs(names);
+        renderChannelChart(window.stChannelData || {});
+        renderLeadsChart();
+      } catch (e) { console.warn('HubSpot channel breakdown:', e); }
 
     } catch(e) { console.error('HubSpot:', e); }
   }
@@ -1808,6 +1995,40 @@ async function loadData() {
       const el_em_o = document.getElementById('em-open');  if (el_em_o) el_em_o.textContent = tot.sent ? fmtPct(tot.opens / tot.sent)   : '—';
       const el_em_k = document.getElementById('em-click'); if (el_em_k) el_em_k.textContent = tot.sent ? fmtPct(tot.clicks / tot.sent)  : '—';
       const el_em_r = document.getElementById('em-ctr');   if (el_em_r) el_em_r.textContent = tot.opens ? fmtPct(tot.clicks / tot.opens) : '—';
+
+      // ── Channel breakdown for ActiveCampaign ──
+      // Honest limitation: ActiveCampaign's Attribution (touchpoints / UTM) is an
+      // in-app report. No documented v3 API endpoint exposes it, so contacts
+      // arrive here with no channel. Rather than assign them to a channel we
+      // cannot evidence, they are grouped as "Unattributed" and the email
+      // campaigns AC *does* return populate the Mass eDM channel.
+      try {
+        const byChan = {};
+        const leadsByChan = {};
+        if (leads) { leadsByChan['Unattributed'] = leads; byChan['Unattributed'] = { booked: 0, sales: 0, rev: 0 }; }
+
+        if (periodCampaigns.length) {
+          byChan['Mass eDM'] = byChan['Mass eDM'] || { booked: 0, sales: 0, rev: 0 };
+          window.channelCampaigns = window.channelCampaigns || {};
+          window.channelCampaigns['Mass eDM'] = periodCampaigns.map(c => ({
+            name: c.name || ('Campaign ' + c.id),
+            status: c.status === '5' ? 'Sent' : (c.sdate ? 'Sent' : 'Draft'),
+            leads: null,                                            // AC does not attribute leads to a campaign
+            clicks: parseInt(c.uniquelinkclicks || c.linkclicks || 0) || 0,
+            impressions: parseInt(c.uniqueopens || c.opens || 0) || 0,  // opens are the nearest AC equivalent
+            spend: null,
+          }));
+        }
+
+        window.stChannelData = byChan;
+        window.stChannelLeads = leadsByChan;
+        window.stLeadsByChannel = leadsByChan;
+        window.stChannelJobs = {};
+        window.hsDealsAttributed = 0;
+        buildChannelTabs(Object.keys(byChan));
+        renderChannelChart(byChan);
+        renderLeadsChart();
+      } catch (e) { console.warn('ActiveCampaign channel breakdown:', e); }
 
     } catch (e) { console.error('ActiveCampaign:', e); }
   }
@@ -2243,10 +2464,11 @@ function renderChannelEngagement(channel) {
   if (!cfg) { card.style.display = 'none'; return; } // Referral / Yellow Pages / Other — no sends/engagement
   card.style.display = '';
   const ga4On = !!(dashboardStatus && dashboardStatus.ga4 && dashboardStatus.ga4.connected && dashboardStatus.ga4.propertySet);
+  const crm = crmDisplayName();
   const sub = document.getElementById('st-channel-engagement-sub');
   if (sub) sub.textContent = cfg.source === 'external'
-    ? ('Not tracked in CRM — website metrics from GA4' + (ga4On ? '' : ' (GA4 not connected)'))
-    : (cfg.label || '');
+    ? ('Not tracked by ' + crm + ' – website metrics from GA4' + (ga4On ? '' : ' (' + msgNotConnected('GA4') + ')'))
+    : (cfg.label || '').replace(/^ServiceTitan/, crm);
   const stStats = (window.stMarketing && window.stMarketing[channel]) || {};
   // Sum the GA4 channel groups that map to this channel
   const g = { sessions: 0, conversions: 0, has: false };
@@ -2260,17 +2482,378 @@ function renderChannelEngagement(channel) {
   if (!tb) return;
   tb.innerHTML = cfg.rows.map(r => {
     let actual;
-    if (r.notTracked) actual = 'Not tracked in CRM or GA4';
+    if (r.notTracked) actual = msgNotTracked(crm);
     else if (cfg.source === 'servicetitan') actual = (stStats[r.k] != null) ? stStats[r.k] : '—';
     else if (r.ga4) { // CRM doesn't track it → try GA4
-      if (!ga4On) actual = 'Connect GA4 to show';
+      if (!ga4On) actual = msgNotConnected('GA4');
       else if (r.k === 'sessions') actual = g.has ? fmtN(g.sessions) : '—';
       else if (r.k === 'conversions') actual = g.has ? fmtN(g.conversions) : '—';
       else if (r.k === 'convRate') actual = (g.has && g.sessions) ? fmtPct(g.conversions / g.sessions) : '—';
       else actual = '—';
-    } else actual = 'Not tracked in CRM or GA4'; // ad-platform-only (impressions, CTR, CPC, spend)
+    } else actual = msgNotTracked(crm + ' or GA4'); // ad-platform-only (impressions, CTR, CPC, spend)
     return `<tr><td>${r.label}</td><td>${actual}</td><td>${r.bm || '—'}</td></tr>`;
   }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// MULTI-CRM CHANNEL LAYER
+// Everything below generalises the ServiceTitan channel/tab work so it runs for
+// HubSpot and ActiveCampaign clients too, sourcing from whichever CRM is
+// connected. The ServiceTitan path is untouched — it still produces the same
+// window.stChannelData / stChannelJobs / stChannelLeads globals, and the same
+// renderers consume them. HubSpot and ActiveCampaign now populate those same
+// globals from their own data, so one set of renderers serves all three.
+// ═══════════════════════════════════════════════════
+
+// ── Empty-state wording ──
+// One template, filled with the actual platform name, so a client always knows
+// WHICH system is missing rather than reading a generic "not available".
+function msgNotConnected(platform) { return platform + ' not connected'; }
+function msgNotTracked(platform)  { return 'Metric not tracked by ' + platform; }
+
+// Human name of whichever CRM this client has connected.
+function crmDisplayName() {
+  const s = dashboardStatus || {};
+  if (s.servicetitan && s.servicetitan.connected) return 'ServiceTitan';
+  if (s.hubspot && s.hubspot.connected) return 'HubSpot';
+  if (s.activecampaign && s.activecampaign.connected) return 'ActiveCampaign';
+  return 'CRM';
+}
+function activeCrm() {
+  const s = dashboardStatus || {};
+  if (s.servicetitan && s.servicetitan.connected) return 'servicetitan';
+  if (s.hubspot && s.hubspot.connected) return 'hubspot';
+  if (s.activecampaign && s.activecampaign.connected) return 'activecampaign';
+  return null;
+}
+
+// ── Canonical channel list ──
+// Shared across every CRM so a Step Change client sees the same channel names
+// whichever system sits behind them. 'Social' is deliberately NOT in this list:
+// it is always-on and rendered by its own tab (see SOCIAL_PLATFORMS).
+const CHANNEL_ORDER = ['Google Paid','Google Organic','Search','Paid Digital','SMS','Mass eDM',
+  'Direct Mail','Print','Direct/Web','Yellow Pages','Referral','AI Referral','Other'];
+
+// ── HubSpot source → channel ──
+// HubSpot does not publish the internal enum strings for hs_analytics_source in
+// its public docs, only the UI labels (Organic search, Paid search, Email
+// marketing, Organic social, Referrals, AI Referrals, Other campaigns, Direct
+// traffic, Paid social). Rather than hard-code an enum that may be wrong, this
+// map covers the widely-observed API values AND the UI labels, and anything
+// unrecognised is Title-Cased and shown as its own channel instead of being
+// silently swallowed into "Other". If HubSpot returns a value we did not
+// anticipate it will appear on screen, correctly labelled, and can be added here.
+const HS_SOURCE_CHANNEL_MAP = {
+  'organic_search':'Google Organic', 'organic search':'Google Organic',
+  'paid_search':'Google Paid', 'paid search':'Google Paid',
+  'email_marketing':'Mass eDM', 'email marketing':'Mass eDM',
+  'social_media':'Social', 'organic_social':'Social', 'organic social':'Social',
+  'paid_social':'Social', 'paid social':'Social',
+  'referrals':'Referral', 'referral':'Referral',
+  'ai_referrals':'AI Referral', 'ai referrals':'AI Referral', 'ai referral':'AI Referral',
+  'other_campaigns':'Paid Digital', 'other campaigns':'Paid Digital',
+  'direct_traffic':'Direct/Web', 'direct traffic':'Direct/Web',
+  'offline':'Other', 'offline sources':'Other',
+};
+
+// Turn an unrecognised CRM source value into a readable channel name.
+function titleiseSource(raw) {
+  return String(raw).replace(/[_\-]+/g, ' ').trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase()                       // ALL-CAPS enum values would survive otherwise
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function hsSourceToChannel(raw) {
+  const v = String(raw == null ? '' : raw).trim().toLowerCase();
+  if (!v || v === '(direct/unknown)') return 'Direct/Web';
+  if (HS_SOURCE_CHANNEL_MAP[v]) return HS_SOURCE_CHANNEL_MAP[v];
+  return titleiseSource(raw) || 'Other';
+}
+
+// Which social platform a Social-channel contact came from, using HubSpot's
+// Traffic Source Drill-Down 1 (documented as carrying the social platform name).
+function hsDrilldownToPlatform(raw) {
+  const v = String(raw == null ? '' : raw).trim().toLowerCase();
+  if (!v) return null;
+  if (v.includes('linkedin')) return 'linkedin';
+  if (v.includes('instagram')) return 'instagram';
+  if (v.includes('facebook') || v.includes('meta')) return 'facebook';
+  return null;
+}
+
+// ── Social platforms ──
+// Always rendered, in this order. `apiStatus` records what each platform can
+// actually deliver, verified against vendor documentation in August 2026:
+//   'pass2'       — the API supports it; the connector ships in the next pass
+//   'unavailable' — the vendor does not expose this data to us at all
+const SOCIAL_PLATFORMS = [
+  { key:'linkedin_page',   name:'LinkedIn – Company Page', group:'LinkedIn', apiStatus:'pass2',
+    note:'Organic page performance. LinkedIn Community Management API (organizationalEntityFollowerStatistics / organizationalEntityShareStatistics), permission rw_organization_admin.',
+    metrics:[ {k:'followers',label:'Followers'}, {k:'impressions',label:'Impressions'},
+              {k:'clicks',label:'Clicks'}, {k:'reactions',label:'Reactions'}, {k:'shares',label:'Shares'},
+              {k:'leads',label:'Leads',tracked:false} ] },
+
+  { key:'linkedin_ads',    name:'LinkedIn – Ads', group:'LinkedIn', apiStatus:'pass2',
+    note:'LinkedIn Advertising API (adAnalytics), permission r_ads_reporting. Lead Gen Form submissions need the separate Lead Sync API (r_marketing_leadgen_automation), which requires LinkedIn approval.',
+    metrics:[ {k:'impressions',label:'Impressions'}, {k:'clicks',label:'Clicks'},
+              {k:'landingPageClicks',label:'Landing page clicks'}, {k:'spend',label:'Spend',currency:true},
+              {k:'conversions',label:'Website conversions'}, {k:'leads',label:'Lead form submissions'} ] },
+
+  { key:'linkedin_personal', name:'LinkedIn – Personal profile', group:'LinkedIn', apiStatus:'pass2',
+    note:'Member post analytics (memberCreatorPostAnalytics), permission r_member_postAnalytics. Covers the authenticated person’s own posts only.',
+    metrics:[ {k:'impressions',label:'Impressions'}, {k:'membersReached',label:'Members reached'},
+              {k:'linkClicks',label:'Link clicks'}, {k:'reactions',label:'Reactions'},
+              {k:'followersGained',label:'Followers gained from content'},
+              {k:'profileViews',label:'Profile views from content'},
+              {k:'spend',label:'Spend',tracked:false} ] },
+
+  { key:'linkedin_salesnav', name:'LinkedIn – Sales Navigator', group:'LinkedIn', apiStatus:'unavailable',
+    unavailableReason:'LinkedIn restricts Sales Navigator data to approved Sales Navigator Application Platform (SNAP) partners. Subscription cost below is manual entry.',
+    metrics:[ {k:'seats',label:'Seats',manual:true}, {k:'inmails',label:'InMails sent',tracked:false},
+              {k:'leads',label:'Leads',tracked:false} ] },
+
+  { key:'meta_fb_ads',     name:'Meta – Facebook Ads', group:'Meta', apiStatus:'pass2',
+    note:'Meta Marketing API insights, permission ads_read, filtered to publisher_platform = facebook.',
+    metrics:[ {k:'impressions',label:'Impressions'}, {k:'reach',label:'Reach'}, {k:'clicks',label:'Clicks'},
+              {k:'ctr',label:'CTR',pct:true}, {k:'cpc',label:'CPC',currency:true},
+              {k:'spend',label:'Spend',currency:true}, {k:'leads',label:'Leads'} ] },
+
+  { key:'meta_ig_ads',     name:'Meta – Instagram Ads', group:'Meta', apiStatus:'pass2',
+    note:'Meta Marketing API insights, permission ads_read, filtered to publisher_platform = instagram.',
+    metrics:[ {k:'impressions',label:'Impressions'}, {k:'reach',label:'Reach'}, {k:'clicks',label:'Clicks'},
+              {k:'ctr',label:'CTR',pct:true}, {k:'cpc',label:'CPC',currency:true},
+              {k:'spend',label:'Spend',currency:true}, {k:'leads',label:'Leads'} ] },
+
+  { key:'meta_fb_page',    name:'Meta – Facebook Page (organic)', group:'Meta', apiStatus:'pass2',
+    note:'Facebook Pages API insights. Meta has deprecated a number of Page insight metrics through 2024–2026, so the surviving metric list is confirmed at connect time.',
+    metrics:[ {k:'followers',label:'Followers'}, {k:'reach',label:'Reach'},
+              {k:'engagements',label:'Engagements'}, {k:'clicks',label:'Link clicks'},
+              {k:'spend',label:'Spend',tracked:false} ] },
+
+  { key:'meta_ig_organic', name:'Meta – Instagram (organic)', group:'Meta', apiStatus:'pass2',
+    note:'Instagram Platform insights. Requires a professional (business or creator) account. Meta deprecated the impressions metric; views replaces it.',
+    metrics:[ {k:'followers',label:'Followers'}, {k:'reach',label:'Reach'}, {k:'views',label:'Views'},
+              {k:'totalInteractions',label:'Total interactions'}, {k:'profileLinksTaps',label:'Profile link taps'},
+              {k:'spend',label:'Spend',tracked:false} ] },
+];
+
+// ── Per-client channel config (manual entry) ──
+// Subscription costs and manually-recorded campaigns live in KV, entered via the
+// setup wizard. No advertising or CRM platform exposes the client's own billing
+// or contract price through its reporting API, so this cannot be automated.
+let channelConfig = { costs: {}, campaigns: {}, currency: 'AUD', salesNavigator: null };
+
+async function loadChannelConfig() {
+  try {
+    const r = await fetch('/api/auth?action=load-channel-config', { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) return;
+    const cfg = await r.json();
+    channelConfig = {
+      costs: (cfg && cfg.costs) || {},
+      campaigns: (cfg && cfg.campaigns) || {},
+      currency: (cfg && cfg.currency) || 'AUD',
+      salesNavigator: cfg ? cfg.salesNavigator : null,
+    };
+  } catch (e) { console.warn('channel config:', e); }
+}
+
+// Exact money, no k/M abbreviation. A subscription price has to read exactly as
+// entered; fmtCurrency's abbreviation is right for revenue totals, wrong here.
+function fmtMoneyExact(n) {
+  const v = Math.round((Number(n) || 0) * 100) / 100;
+  return '$' + v.toLocaleString('en-AU', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 });
+}
+
+function costFor(key) {
+  const c = channelConfig.costs || {};
+  const v = c[key];
+  if (v == null || v === '') return null;
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
+}
+
+// Renders the subscription-cost card for a channel (or the Social tab).
+function renderSubscriptionCard(key, valueElId, bodyElId) {
+  const valEl = document.getElementById(valueElId);
+  const bodyEl = document.getElementById(bodyElId);
+  const amount = costFor(key);
+  if (valEl) valEl.textContent = amount != null ? (fmtMoneyExact(amount) + ' / mo') : 'Not entered';
+  if (bodyEl) {
+    bodyEl.innerHTML = amount != null
+      ? '<div class="card-sub">Entered manually in this client’s setup. Platforms do not expose subscription or contract pricing through their reporting APIs.</div>'
+      : '<div class="card-sub">No cost recorded for this channel. Add it under Channel costs in this client’s setup page.</div>';
+  }
+}
+
+// Campaigns running through a channel. Sources, in order of preference:
+//   1. campaigns the connected CRM attributes to this channel (live)
+//   2. campaigns recorded manually in the setup wizard
+// Falls back to a platform-named empty state rather than an empty table.
+function renderCampaignsCard(channel) {
+  const tb = document.getElementById('ch-campaigns-tbody');
+  const sub = document.getElementById('ch-campaigns-sub');
+  if (!tb) return;
+
+  const live = (window.channelCampaigns && window.channelCampaigns[channel]) || [];
+  const manual = (channelConfig.campaigns && channelConfig.campaigns[channel]) || [];
+  const rows = live.length ? live : manual.map(m => ({ name: m.name || m, status: m.status || 'Manual entry', manual: true }));
+
+  if (sub) sub.textContent = live.length
+    ? ('From ' + crmDisplayName())
+    : (manual.length ? 'Recorded manually in this client’s setup' : '');
+
+  if (!rows.length) {
+    const why = live.length === 0 && manual.length === 0
+      ? ('No campaigns attributed to this channel by ' + crmDisplayName())
+      : '';
+    tb.innerHTML = '<tr><td colspan="6" class="empty">' + why + '</td></tr>';
+    return;
+  }
+
+  const cell = (v, fmt) => (v == null ? msgNotTracked(crmDisplayName()) : fmt(v));
+  tb.innerHTML = rows.map(c => '<tr>'
+    + '<td>' + (c.name || '—') + '</td>'
+    + '<td>' + (c.status || '—') + '</td>'
+    + '<td>' + cell(c.leads, fmtN) + '</td>'
+    + '<td>' + cell(c.clicks, fmtN) + '</td>'
+    + '<td>' + cell(c.impressions, fmtN) + '</td>'
+    + '<td>' + cell(c.spend, fmtCurrency) + '</td>'
+    + '</tr>').join('');
+}
+
+// ── Social tab ──
+// Always rendered. Each platform block shows either its live numbers, its
+// "not connected" state, or (for Sales Navigator) an explicit statement that
+// the vendor does not make the data available.
+function renderSocialTab() {
+  const host = document.getElementById('social-platforms');
+  if (!host) return;
+
+  const socialStatus = (dashboardStatus && dashboardStatus.social) || {};
+  const data = window.socialData || {};
+  let totals = { leads: 0, clicks: 0, impressions: 0, spend: 0 };
+  let anyConnected = false;
+
+  host.innerHTML = SOCIAL_PLATFORMS.map(p => {
+    const connected = !!(socialStatus[p.key] && socialStatus[p.key].connected);
+    const d = data[p.key] || {};
+    if (connected) {
+      anyConnected = true;
+      ['leads','clicks','impressions','spend'].forEach(k => { if (typeof d[k] === 'number') totals[k] += d[k]; });
+    }
+
+    // Sales Navigator: LinkedIn does not expose this to non-SNAP partners.
+    if (p.apiStatus === 'unavailable') {
+      const seats = channelConfig.salesNavigator && channelConfig.salesNavigator.seats;
+      const rows = p.metrics.map(m => {
+        let actual;
+        if (m.manual) actual = (seats != null && seats !== '') ? fmtN(seats) : 'Not entered';
+        else actual = msgNotTracked(p.name);
+        return '<tr><td>' + m.label + '</td><td>' + actual + '</td></tr>';
+      }).join('');
+      return socialBlock(p, 'Data not available', p.unavailableReason, rows);
+    }
+
+    const rows = p.metrics.map(m => {
+      let actual;
+      if (m.tracked === false)      actual = msgNotTracked(p.name);
+      else if (!connected)          actual = msgNotConnected(p.name);
+      else if (d[m.k] == null)      actual = msgNotTracked(p.name);
+      else if (m.currency)          actual = fmtCurrency(d[m.k]);
+      else if (m.pct)               actual = fmtPct(d[m.k]);
+      else                          actual = fmtN(d[m.k]);
+      return '<tr><td>' + m.label + '</td><td>' + actual + '</td></tr>';
+    }).join('');
+
+    // Campaigns running on this platform
+    const camps = (d.campaigns || []);
+    const campRows = camps.length
+      ? camps.map(c => '<tr><td>' + (c.name || '—') + '</td><td>' + (c.status || '—') + '</td>'
+          + '<td>' + (c.leads == null ? msgNotTracked(p.name) : fmtN(c.leads)) + '</td>'
+          + '<td>' + (c.clicks == null ? msgNotTracked(p.name) : fmtN(c.clicks)) + '</td>'
+          + '<td>' + (c.impressions == null ? msgNotTracked(p.name) : fmtN(c.impressions)) + '</td></tr>').join('')
+      : '<tr><td colspan="5" class="empty">' + (connected ? ('No campaigns returned by ' + p.name) : msgNotConnected(p.name)) + '</td></tr>';
+
+    return socialBlock(p, connected ? 'Connected' : 'Not connected', p.note, rows, campRows);
+  }).join('');
+
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set('kv-soc-leads',  anyConnected ? fmtN(totals.leads)       : msgNotConnected('Social platforms'));
+  set('kv-soc-clicks', anyConnected ? fmtN(totals.clicks)      : msgNotConnected('Social platforms'));
+  set('kv-soc-impr',   anyConnected ? fmtN(totals.impressions) : msgNotConnected('Social platforms'));
+  set('kv-soc-spend',  anyConnected ? fmtCurrency(totals.spend): msgNotConnected('Social platforms'));
+
+  renderSubscriptionCard('Social', 'soc-subscription-value', 'soc-subscription-body');
+}
+
+function socialBlock(p, badge, note, metricRows, campaignRows) {
+  const badgeColour = badge === 'Connected' ? '#0F9D58' : 'var(--light-slate)';
+  return ''
+  + '<div class="card gap-t">'
+  +   '<div class="card-header">'
+  +     '<div><div class="card-title">' + p.name + '</div>'
+  +     (note ? '<div class="card-sub">' + note + '</div>' : '') + '</div>'
+  +     '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:' + badgeColour + '">' + badge + '</div>'
+  +   '</div>'
+  +   '<div class="tbl-wrap">'
+  +     '<table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>' + metricRows + '</tbody></table>'
+  +   '</div>'
+  + (campaignRows
+      ? '<div class="tbl-wrap" style="margin-top:8px">'
+        + '<table><thead><tr><th>Campaign</th><th>Status</th><th>Leads</th><th>Clicks</th><th>Impressions</th></tr></thead>'
+        + '<tbody>' + campaignRows + '</tbody></table></div>'
+      : '')
+  + '</div>';
+}
+
+// ── HubSpot → channel aggregation ──
+// Leads by channel come straight from each contact's hs_analytics_source.
+// Deal attribution needs a deal→contact association, so it degrades gracefully:
+// if associations are unavailable the deal columns read "not tracked" rather
+// than silently reporting zero.
+function buildHubSpotChannels(contacts, deals, dealChannelById) {
+  const byChan = {};
+  const leadsByChan = {};
+  const socialByPlatform = { linkedin: 0, facebook: 0, instagram: 0, unknown: 0 };
+  const touch = ch => { if (!byChan[ch]) byChan[ch] = { booked: 0, sales: 0, rev: 0 }; return byChan[ch]; };
+
+  (contacts || []).forEach(c => {
+    const props = c.properties || {};
+    const ch = hsSourceToChannel(props.hs_analytics_source);
+    leadsByChan[ch] = (leadsByChan[ch] || 0) + 1;
+    touch(ch);
+    if (ch === 'Social') {
+      const plat = hsDrilldownToPlatform(props.hs_analytics_source_data_1);
+      socialByPlatform[plat || 'unknown'] += 1;
+    }
+  });
+
+  let attributed = 0;
+  (deals || []).forEach(d => {
+    const ch = dealChannelById ? dealChannelById[d.id] : null;
+    if (!ch) return;
+    attributed += 1;
+    const b = touch(ch);
+    b.booked += 1;
+    const amt = parseFloat((d.properties && d.properties.amount) || 0) || 0;
+    if ((d.properties && d.properties.hs_is_closed_won) === 'true') { b.sales += 1; b.rev += amt; }
+  });
+
+  window.stChannelData   = byChan;
+  window.stChannelLeads  = leadsByChan;
+  window.stLeadsByChannel = leadsByChan;
+  window.stChannelJobs   = {};                 // HubSpot has no job object
+  window.hsDealsAttributed = attributed;
+  window.socialLeadsByPlatform = socialByPlatform;
+
+  const names = Object.keys(byChan)
+    .filter(ch => (byChan[ch].booked || byChan[ch].rev || leadsByChan[ch]))
+    .sort((a, b) => {
+      const ia = CHANNEL_ORDER.indexOf(a), ib = CHANNEL_ORDER.indexOf(b);
+      return (ia === -1 ? 998 : ia) - (ib === -1 ? 998 : ib);
+    });
+  return names;
 }
 
 function renderLeadsChart() {

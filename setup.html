@@ -473,6 +473,7 @@
       <div class="crm-tabs" id="crm-tabs">
         <button class="crm-tab active" data-crm="hubspot" type="button" onclick="selectCrm('hubspot')">HubSpot</button>
         <button class="crm-tab" data-crm="activecampaign" type="button" onclick="selectCrm('activecampaign')">ActiveCampaign</button>
+        <button class="crm-tab" data-crm="servicetitan" type="button" onclick="selectCrm('servicetitan')">ServiceTitan</button>
       </div>
 
       <div id="crm-panel-hubspot">
@@ -497,6 +498,26 @@
         <div class="error-note" id="ac-error" style="display:none"></div>
         <div class="hint">
           ActiveCampaign → Settings → Developer. Copy the <strong>API URL</strong> and <strong>Key</strong>.
+        </div>
+      </div>
+
+      <div id="crm-panel-servicetitan" style="display:none">
+        <div class="key-row">
+          <input type="text" class="key-input" id="st-appkey" placeholder="App Key (ak1...)" autocomplete="off">
+        </div>
+        <div class="key-row">
+          <input type="text" class="key-input" id="st-tenant" placeholder="Tenant ID (e.g. 123456789)" autocomplete="off">
+        </div>
+        <div class="key-row">
+          <input type="text" class="key-input" id="st-clientid" placeholder="Client ID" autocomplete="off">
+        </div>
+        <div class="key-row">
+          <input type="password" class="key-input" id="st-secret" placeholder="Client Secret" autocomplete="off">
+          <button class="btn btn-primary" id="btn-st" onclick="saveServiceTitanToken()">Save</button>
+        </div>
+        <div class="error-note" id="servicetitan-error" style="display:none"></div>
+        <div class="hint">
+          ServiceTitan Developer Portal → My Apps → your app. The <strong>App Key</strong> is on the app page; a tenant admin generates the <strong>Client ID</strong> and <strong>Client Secret</strong> for your <strong>Tenant ID</strong> under API Application Access.
         </div>
       </div>
     </div>
@@ -531,6 +552,50 @@
     </div>
   </div>
 
+  <!-- Channel costs (manual entry) -->
+  <div class="service-card" id="card-channels">
+    <div class="service-header">
+      <div class="service-left">
+        <div class="service-icon">💲</div>
+        <div>
+          <div class="service-name">Channel costs</div>
+          <div class="service-desc">Monthly subscription cost per channel</div>
+        </div>
+      </div>
+      <div class="status-badge badge-missing" id="badge-channels">Optional</div>
+    </div>
+    <div class="service-body" id="body-channels">
+      <div class="hint" style="margin-bottom:12px">
+        <strong>Requires manual input due to data security restrictions.</strong>
+        No advertising, CRM or social platform exposes your own subscription or
+        contract price through its reporting API, so these figures cannot be
+        pulled automatically. Anything left blank shows as “Not entered” on the
+        dashboard rather than as zero.
+      </div>
+      <div id="channel-cost-rows"></div>
+
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+          <input type="checkbox" id="salesnav-enabled" onchange="toggleSalesNav()">
+          <span>This client uses LinkedIn Sales Navigator</span>
+        </label>
+        <div id="salesnav-detail" style="display:none;margin-top:10px">
+          <input type="number" min="0" class="key-input" id="salesnav-seats" placeholder="Number of seats">
+          <div class="hint" style="margin-top:8px">
+            LinkedIn restricts Sales Navigator data to approved Sales Navigator
+            Application Platform (SNAP) partners, so seat usage, InMail volume and
+            SN-sourced leads cannot be read through the API. Seats and cost are
+            recorded here so the dashboard can show them alongside the metrics it
+            genuinely cannot retrieve.
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="margin-top:16px" onclick="saveChannelConfig()">Save channel costs</button>
+      <div class="error-note" id="channels-error" style="display:none"></div>
+    </div>
+  </div>
+
   <!-- CTA -->
   <div class="cta-section">
     <div class="cta-note" id="cta-note">Complete all three connections to continue</div>
@@ -544,7 +609,7 @@
 // ── State ──
 const slug = getSlug();
 const token = localStorage.getItem(`sc_token_${slug}`);
-let status = { anthropic: {}, hubspot: {}, activecampaign: {}, ga4: {} };
+let status = { anthropic: {}, hubspot: {}, activecampaign: {}, servicetitan: {}, ga4: {} };
 
 if (!token) {
   window.location.href = `/${slug}`;
@@ -565,6 +630,7 @@ function getSlug() {
 window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('topbar-client').textContent = `· Setup`;
   await loadStatus();
+  await loadChannelConfig();
 
   // Show OAuth result messages
   if (connectedService && connectedStatus === 'error') {
@@ -612,8 +678,8 @@ async function loadStatus() {
 function renderStatus() {
   renderService('anthropic', status.anthropic.connected);
 
-  const crmConnected = status.hubspot.connected || status.activecampaign.connected;
-  const crmType = status.hubspot.connected ? 'HubSpot' : status.activecampaign.connected ? 'ActiveCampaign' : null;
+  const crmConnected = status.hubspot.connected || status.activecampaign.connected || status.servicetitan.connected;
+  const crmType = status.hubspot.connected ? 'HubSpot' : status.activecampaign.connected ? 'ActiveCampaign' : status.servicetitan.connected ? 'ServiceTitan' : null;
   renderCrm(crmConnected, crmType);
 
   const ga4Connected = status.ga4.connected;
@@ -686,6 +752,7 @@ function selectCrm(type) {
   document.querySelectorAll('.crm-tab').forEach(t => t.classList.toggle('active', t.dataset.crm === type));
   document.getElementById('crm-panel-hubspot').style.display = type === 'hubspot' ? '' : 'none';
   document.getElementById('crm-panel-activecampaign').style.display = type === 'activecampaign' ? '' : 'none';
+  document.getElementById('crm-panel-servicetitan').style.display = type === 'servicetitan' ? '' : 'none';
 }
 
 // ── Anthropic ──
@@ -780,6 +847,39 @@ async function saveActiveCampaignToken() {
   }
 }
 
+// ── ServiceTitan ──
+async function saveServiceTitanToken() {
+  const appKey = document.getElementById('st-appkey').value.trim();
+  const tenant = document.getElementById('st-tenant').value.trim();
+  const clientId = document.getElementById('st-clientid').value.trim();
+  const clientSecret = document.getElementById('st-secret').value.trim();
+  const btn = document.getElementById('btn-st');
+  const err = document.getElementById('servicetitan-error');
+  err.style.display = 'none';
+  if (!appKey || !tenant || !clientId || !clientSecret) {
+    err.textContent = 'App Key, Tenant ID, Client ID and Client Secret are all required.';
+    err.style.display = 'block';
+    return;
+  }
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  const res = await fetch('/api/auth?action=save-servicetitan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ appKey, tenant, clientId, clientSecret }),
+  });
+  const data = await res.json();
+  if (res.ok) {
+    status.servicetitan.connected = true;
+    renderStatus();
+  } else {
+    err.textContent = data.error || 'Failed to save credentials';
+    err.style.display = 'block';
+    btn.innerHTML = 'Save';
+    btn.disabled = false;
+  }
+}
+
 // ── GA4 ──
 function connectGa4() {
   window.location.href = `/api/auth?action=google-start&slug=${slug}`;
@@ -853,6 +953,103 @@ async function savePropertyId(id) {
   } else {
     const data = await res.json();
     err.textContent = data.error || 'Failed to save property';
+    err.style.display = 'block';
+  }
+}
+
+// ── Channel costs (manual entry) ──
+// Mirrors CHANNEL_ORDER + the Social platforms in index.html. Kept as a literal
+// list here so the setup page does not depend on the dashboard bundle.
+const COST_KEYS = [
+  { key: 'Social',          label: 'Social (all platforms)' },
+  { key: 'linkedin_ads',    label: '— LinkedIn Ads' },
+  { key: 'linkedin_page',   label: '— LinkedIn Company Page' },
+  { key: 'linkedin_salesnav', label: '— LinkedIn Sales Navigator' },
+  { key: 'meta_ads',        label: '— Meta Ads (Facebook + Instagram)' },
+  { key: 'Google Paid',     label: 'Google Paid' },
+  { key: 'Google Organic',  label: 'Google Organic / SEO' },
+  { key: 'Paid Digital',    label: 'Paid Digital' },
+  { key: 'SMS',             label: 'SMS' },
+  { key: 'Mass eDM',        label: 'Mass eDM' },
+  { key: 'Direct Mail',     label: 'Direct Mail' },
+  { key: 'Print',           label: 'Print' },
+  { key: 'Yellow Pages',    label: 'Yellow Pages' },
+  { key: 'Referral',        label: 'Referral' },
+];
+
+let channelConfig = { costs: {}, campaigns: {}, currency: 'AUD', salesNavigator: null };
+
+function renderChannelCostRows() {
+  const host = document.getElementById('channel-cost-rows');
+  if (!host) return;
+  host.innerHTML = COST_KEYS.map(c => {
+    const v = channelConfig.costs && channelConfig.costs[c.key] != null ? channelConfig.costs[c.key] : '';
+    const indent = c.label.startsWith('—') ? 'padding-left:14px;' : '';
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;' + indent + '">'
+      + '<div style="flex:1;font-size:14px">' + c.label + '</div>'
+      + '<div style="font-size:13px;color:var(--muted, #7a8699)">$/mo</div>'
+      + '<input type="number" min="0" step="0.01" class="key-input" style="max-width:140px" '
+      +   'data-cost-key="' + c.key + '" value="' + v + '" placeholder="Not entered">'
+      + '</div>';
+  }).join('');
+}
+
+function toggleSalesNav() {
+  const on = document.getElementById('salesnav-enabled').checked;
+  document.getElementById('salesnav-detail').style.display = on ? 'block' : 'none';
+}
+
+async function loadChannelConfig() {
+  try {
+    const r = await fetch('/api/auth?action=load-channel-config', { headers: { Authorization: `Bearer ${token}` } });
+    if (r.ok) {
+      const cfg = await r.json();
+      channelConfig = {
+        costs: (cfg && cfg.costs) || {},
+        campaigns: (cfg && cfg.campaigns) || {},
+        currency: (cfg && cfg.currency) || 'AUD',
+        salesNavigator: cfg ? cfg.salesNavigator : null,
+      };
+    }
+  } catch (e) { console.warn('channel config:', e); }
+  renderChannelCostRows();
+  const sn = channelConfig.salesNavigator;
+  if (sn && sn.enabled) {
+    document.getElementById('salesnav-enabled').checked = true;
+    document.getElementById('salesnav-detail').style.display = 'block';
+    if (sn.seats != null) document.getElementById('salesnav-seats').value = sn.seats;
+  }
+}
+
+async function saveChannelConfig() {
+  const err = document.getElementById('channels-error');
+  err.style.display = 'none';
+  const costs = {};
+  document.querySelectorAll('[data-cost-key]').forEach(inp => {
+    const v = inp.value.trim();
+    if (v !== '') costs[inp.dataset.costKey] = parseFloat(v);
+  });
+  const snOn = document.getElementById('salesnav-enabled').checked;
+  const seatsVal = document.getElementById('salesnav-seats').value.trim();
+  const body = {
+    costs,
+    campaigns: channelConfig.campaigns || {},
+    currency: channelConfig.currency || 'AUD',
+    salesNavigator: { enabled: snOn, seats: seatsVal === '' ? null : parseInt(seatsVal, 10) },
+  };
+  const res = await fetch('/api/auth?action=save-channel-config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    channelConfig.costs = costs;
+    channelConfig.salesNavigator = body.salesNavigator;
+    const badge = document.getElementById('badge-channels');
+    if (badge) { badge.textContent = 'Saved'; badge.className = 'status-badge badge-connected'; }
+  } else {
+    const data = await res.json().catch(() => ({}));
+    err.textContent = data.error || 'Failed to save channel costs';
     err.style.display = 'block';
   }
 }
